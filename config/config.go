@@ -3,18 +3,18 @@ package config
 import (
 	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/joho/godotenv"
 	"path"
 	"time"
 )
 
 type (
 	Config struct {
-		App    `yaml:"app"`
-		HTTP   `yaml:"http"`
-		Log    `yaml:"log"`
-		PG     `yaml:"postgres"`
-		JWT    `yaml:"jwt"`
-		Hasher `yaml:"hasher"`
+		App  `yaml:"app"`
+		HTTP `yaml:"http"`
+		Log  `yaml:"log"`
+		PG   `yaml:"postgres"`
+		JWT  `yaml:"jwt"`
 	}
 
 	App struct {
@@ -39,20 +39,17 @@ type (
 		SignKey  string        `env-required:"true"                  env:"JWT_SIGN_KEY"`
 		TokenTTL time.Duration `env-required:"true" yaml:"token_ttl" env:"JWT_TOKEN_TTL"`
 	}
-
-	Hasher struct {
-		Salt string `env-required:"true" env:"HASHER_SALT"`
-	}
-
-	WebAPI struct {
-		GDriveJSONFilePath string `env-required:"false" env:"GOOGLE_DRIVE_JSON_FILE_PATH"`
-	}
 )
 
 func NewConfig(configPath string) (*Config, error) {
 	cfg := &Config{}
 
-	err := cleanenv.ReadConfig(path.Join("./", configPath), cfg)
+	err := godotenv.Load()
+	if err != nil {
+		return nil, fmt.Errorf("error loading .env file: ", err)
+	}
+
+	err = cleanenv.ReadConfig(path.Join("./", configPath), cfg)
 	if err != nil {
 		return nil, fmt.Errorf("error reading config file: %w", err)
 	}
@@ -61,6 +58,5 @@ func NewConfig(configPath string) (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error updating env: %w", err)
 	}
-
 	return cfg, nil
 }

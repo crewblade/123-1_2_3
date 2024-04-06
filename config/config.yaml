@@ -6,7 +6,7 @@ http:
   port: 8080
 
 log:
-  level: 'debug'
+  level: 'local'
 
 postgres:
   max_pool_size: 20
