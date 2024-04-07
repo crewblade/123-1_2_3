@@ -11,8 +11,4 @@ http:
 log:
   level: 'local'
 
-postgres:
-  max_pool_size: 20
 
-jwt:
-  token_ttl: 120m

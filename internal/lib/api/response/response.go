@@ -1,15 +1,13 @@
 package response
 
-import "net/http"
-
 type Response struct {
 	Status int    `json:"status"`
 	Error  string `json:"errs,omitempty"`
 }
 
-func OK() Response {
+func NewSuccess(successStatus int) Response {
 	return Response{
-		Status: http.StatusOK,
+		Status: successStatus,
 	}
 }
 
