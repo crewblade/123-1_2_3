@@ -23,7 +23,10 @@ type (
 	}
 
 	HTTP struct {
-		Port string `env-required:"true" yaml:"port" env:"HTTP_PORT"`
+		Addr            string        `yaml:"addr" env-default:"localhost:8080"`
+		Timeout         time.Duration `yaml:"timeout" env-default:"4s"`
+		IdleTimeout     time.Duration `yaml:"idle_timeout" env-default:"30s"`
+		ShutdownTimeout time.Duration `yaml:"shutdown_timeout" env-default:"3s"`
 	}
 
 	Log struct {
