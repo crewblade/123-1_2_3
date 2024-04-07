@@ -1,17 +1,22 @@
 package postgres
 
-func (s *Storage) GetBanners() {
+import (
+	"context"
+	"github.com/crewblade/banner-management-service/internal/domain/models"
+)
+
+func (s *Storage) GetBanners(ctx context.Context) ([]models.Banner, error) {
+	return nil, nil
+}
+func (s *Storage) SaveBanner(ctx context.Context) (int, error) {
+	return 1, nil
+}
+func (s *Storage) DeleteBanner(ctx context.Context, bannerID int) error {
+	return nil
+}
+func (s *Storage) UpdateBanner(ctx context.Context) {
 
 }
-func (s *Storage) SaveBanner() {
-
-}
-func (s *Storage) DeleteBanner() {
-
-}
-func (s *Storage) UpdateBanner() {
-
-}
-func (s *Storage) GetUserBanner() {
+func (s *Storage) GetUserBanner(ctx context.Context) {
 
 }

@@ -41,11 +41,11 @@ func Run(configPath string) {
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Recoverer)
 
-	router.Get("/user_banner", user_banner.GetUserBanner(log, storage))
-	router.Get("/banner", banner.GetBanners(log, storage))
-	router.Post("/banner", banner.SaveBanner(log, storage))
-	router.Patch("/banner/{id}", banner_id.UpdateBanner(log, storage))
-	router.Delete("/banner/{id}", banner_id.DeleteBanner(log, storage))
+	router.Get("/user_banner", user_banner.GetUserBanner(log, storage, storage))
+	router.Get("/banner", banner.GetBanners(log, storage, storage))
+	router.Post("/banner", banner.SaveBanner(log, storage, storage))
+	router.Patch("/banner/{id}", banner_id.UpdateBanner(log, storage, storage))
+	router.Delete("/banner/{id}", banner_id.DeleteBanner(log, storage, storage))
 
 	log.Info("Starting http server...", slog.String("addr", cfg.Addr))
 
