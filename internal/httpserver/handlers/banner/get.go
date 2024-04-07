@@ -3,6 +3,11 @@ package banner
 import (
 	"github.com/crewblade/banner-management-service/internal/domain/models"
 	"github.com/crewblade/banner-management-service/internal/lib/api/response"
+	"github.com/crewblade/banner-management-service/internal/lib/logger/sl"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/render"
+	"log/slog"
+	"net/http"
 )
 
 type Banner struct {
@@ -23,7 +28,6 @@ type RequestGet struct {
 	Offset          int    `json:"offset"`
 	Token           string `json:"token"`
 }
-
 type ResponseGet struct {
 	response.Response
 	Banners []Banner `json:"items"`
@@ -33,6 +37,26 @@ type BannersGetter interface {
 	GetBanners()
 }
 
-func GetBanners() {
+func GetBanners(log *slog.Logger, bannersGetter BannersGetter) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		const op = "internal.httpserver.handlers.banner.GetBanners"
+
+		log = log.With("op", op)
+		log = log.With("request_id", middleware.GetReqID(r.Context()))
+
+		var req RequestGet
+		err := render.DecodeJSON(r.Body, &req)
+
+		if err != nil {
+			log.Error("failed to decode request body", sl.Err(err))
+
+			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
+
+			return
+		}
+
+		log.Info("request body decoded", slog.Any("request", req))
+
+	}
 
 }

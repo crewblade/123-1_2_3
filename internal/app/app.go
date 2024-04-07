@@ -16,10 +16,9 @@ func Run(configPath string) {
 	cfg, err := config.NewConfig(configPath)
 	const op = "internal.app.Run"
 	if err != nil {
-		fmt.Printf("Config error: %s", err)
+		fmt.Printf("Config errs: %s", err)
 		os.Exit(1)
 	}
-
 	log := SetupLogger(cfg.Log.Level)
 	log.Info("Starting app", slog.Any("cfg", cfg))
 

@@ -49,17 +49,17 @@ func NewConfig(configPath string) (*Config, error) {
 
 	err := godotenv.Load()
 	if err != nil {
-		return nil, fmt.Errorf("error loading .env file: ", err)
+		return nil, fmt.Errorf("errs loading .env file: ", err)
 	}
 
 	err = cleanenv.ReadConfig(path.Join("./", configPath), cfg)
 	if err != nil {
-		return nil, fmt.Errorf("error reading config file: %w", err)
+		return nil, fmt.Errorf("errs reading config file: %w", err)
 	}
 
 	err = cleanenv.UpdateEnv(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("error updating env: %w", err)
+		return nil, fmt.Errorf("errs updating env: %w", err)
 	}
 	return cfg, nil
 }

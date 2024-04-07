@@ -1,24 +1,21 @@
 package response
 
-type Response struct {
-	Status string `json:"status"`
-	Error  string `json:"error,omitempty"`
-}
+import "net/http"
 
-const (
-	StatusOK    = "OK"
-	StatusError = "Error"
-)
+type Response struct {
+	Status int    `json:"status"`
+	Error  string `json:"errs,omitempty"`
+}
 
 func OK() Response {
 	return Response{
-		Status: StatusOK,
+		Status: http.StatusOK,
 	}
 }
 
-func Error(msg string) Response {
+func NewError(errStatus int, msg string) Response {
 	return Response{
-		Status: StatusError,
+		Status: errStatus,
 		Error:  msg,
 	}
 }
