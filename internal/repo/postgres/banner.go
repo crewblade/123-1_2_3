@@ -12,7 +12,7 @@ func (s *Storage) SaveBanner(
 	ctx context.Context,
 	tagIDs []int,
 	featureID int,
-	content map[string]string,
+	content string,
 	isActive bool,
 ) (int, error) {
 	return 1, nil
@@ -25,7 +25,7 @@ func (s *Storage) UpdateBanner(
 	bannerID int,
 	tagIDs []int,
 	featureID int,
-	content map[string]string,
+	content string,
 	isActive bool,
 ) error {
 	return nil
@@ -35,6 +35,6 @@ func (s *Storage) GetUserBanner(
 	tagID int,
 	featureID int,
 	isAdmin bool,
-) (map[string]string, error) {
-	return nil, nil
+) (string, error) {
+	return "", nil
 }

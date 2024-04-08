@@ -16,11 +16,11 @@ import (
 
 type ResponseGet struct {
 	response.Response
-	Content map[string]string `json:"content"`
+	Content string `json:"content"`
 }
 
 type UserBannerGetter interface {
-	GetUserBanner(ctx context.Context, tagID int, featureID int, isAdmin bool) (map[string]string, error)
+	GetUserBanner(ctx context.Context, tagID int, featureID int, isAdmin bool) (string, error)
 }
 type UserProvider interface {
 	IsAdmin(ctx context.Context, token string) (bool, error)
@@ -65,7 +65,7 @@ func GetUserBanner(
 			render.JSON(w, r, response.NewError(http.StatusUnauthorized, "User is not authorized"))
 			return
 		}
-		bannerContent := make(map[string]string)
+		var bannerContent string
 		if useLastRevision {
 			//banner, err = cache.GetUserBanner()
 		} else {

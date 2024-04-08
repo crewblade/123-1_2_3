@@ -11,10 +11,10 @@ import (
 )
 
 type RequestSave struct {
-	TagIDs    []int             `json:"tag_ids"`
-	FeatureID int               `json:"feature_id"`
-	Content   map[string]string `json:"content"`
-	IsActive  bool              `json:"is_active"`
+	TagIDs    []int  `json:"tag_ids"`
+	FeatureID int    `json:"feature_id"`
+	Content   string `json:"content"`
+	IsActive  bool   `json:"is_active"`
 }
 
 type ResponseSave struct {
@@ -27,7 +27,7 @@ type BannerSaver interface {
 		ctx context.Context,
 		tagIDs []int,
 		featureID int,
-		content map[string]string,
+		content string,
 		isActive bool,
 	) (int, error)
 }
