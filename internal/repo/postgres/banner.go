@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/crewblade/banner-management-service/internal/domain/models"
 	"github.com/crewblade/banner-management-service/internal/lib/api/errs"
+	"github.com/lib/pq"
 )
 
 func (s *Storage) GetBanners(ctx context.Context) ([]models.Banner, error) {
@@ -33,13 +34,14 @@ func (s *Storage) SaveBanner(
 	defer stmt.Close()
 
 	var bannerID int
-	err = stmt.QueryRowContext(ctx, tagIDs, featureID, content, isActive).Scan(&bannerID)
+	err = stmt.QueryRowContext(ctx, pq.Array(tagIDs), featureID, content, isActive).Scan(&bannerID)
 	if err != nil {
 		tx.Rollback()
 		return errValue, fmt.Errorf("%s: execute statement: %w", op, err)
 	}
 
 	if err := tx.Commit(); err != nil {
+		tx.Rollback()
 		return errValue, fmt.Errorf("%s: commit transaction: %w", op, err)
 	}
 

@@ -1,6 +1,6 @@
 
 CREATE TABLE IF NOT EXISTS banners (
-                                       id INT PRIMARY KEY,
+                                       id SERIAL PRIMARY KEY,
                                        content TEXT NOT NULL,
                                        feature_id INT NOT NULL,
                                        tag_ids INT[] NOT NULL,

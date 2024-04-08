@@ -2,6 +2,7 @@ package banner
 
 import (
 	"context"
+	"fmt"
 	"github.com/crewblade/banner-management-service/internal/lib/api/response"
 	"github.com/crewblade/banner-management-service/internal/lib/logger/sl"
 	"github.com/go-chi/chi/v5/middleware"
@@ -55,6 +56,7 @@ func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProv
 		log.With("token", token)
 
 		isAdmin, err := userProvider.IsAdmin(r.Context(), token)
+		log.Info("isAdmin:", isAdmin)
 		if err != nil {
 			log.Error("Invalid token: ", sl.Err(err))
 			render.JSON(w, r, response.NewError(http.StatusUnauthorized, "User is not authorized"))
@@ -62,11 +64,11 @@ func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProv
 		}
 
 		if !isAdmin {
-			log.Error("User have no access", sl.Err(err))
+			log.Error("User have no access")
 			render.JSON(w, r, response.NewError(http.StatusForbidden, "User have no access"))
 			return
 		}
-
+		fmt.Println("ISADMIN:", isAdmin)
 		bannerID, err := bannerSaver.SaveBanner(
 			r.Context(),
 			req.TagIDs,

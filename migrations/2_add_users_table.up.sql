@@ -3,4 +3,4 @@ CREATE TABLE IF NOT EXISTS users (
                                      is_admin BOOLEAN NOT NULL DEFAULT false
 );
 
-CREATE INDEX idx_users_token ON users (token);
+CREATE INDEX IF NOT EXISTS idx_users_token ON users (token);
