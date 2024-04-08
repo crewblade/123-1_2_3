@@ -60,7 +60,7 @@ func GetUserBanner(
 		useLastRevisionStr := r.URL.Query().Get("use_last_revision")
 		if useLastRevisionStr == "true" {
 			useLastRevision = true
-		} else if useLastRevisionStr != "false" {
+		} else if useLastRevisionStr != "false" && useLastRevisionStr != "" {
 			log.Error("Incorrect data")
 			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
 			return

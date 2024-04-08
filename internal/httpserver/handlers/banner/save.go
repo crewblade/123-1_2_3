@@ -2,7 +2,6 @@ package banner
 
 import (
 	"context"
-	"fmt"
 	"github.com/crewblade/banner-management-service/internal/lib/api/response"
 	"github.com/crewblade/banner-management-service/internal/lib/logger/sl"
 	"github.com/go-chi/chi/v5/middleware"
@@ -68,7 +67,6 @@ func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProv
 			render.JSON(w, r, response.NewError(http.StatusForbidden, "User have no access"))
 			return
 		}
-		fmt.Println("ISADMIN:", isAdmin)
 		bannerID, err := bannerSaver.SaveBanner(
 			r.Context(),
 			req.TagIDs,
@@ -82,6 +80,7 @@ func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProv
 			return
 		}
 
+		log.Info("Successful saved")
 		render.JSON(w, r, ResponseSave{
 			response.NewSuccess(http.StatusCreated),
 			bannerID,
