@@ -36,5 +36,9 @@ func (s *Storage) GetUserBanner(
 	featureID int,
 	isAdmin bool,
 ) (string, error) {
+	//SELECT content
+	//FROM banners
+	//WHERE feature_id = $1
+	//  AND $2 = ANY(tag_ids);
 	return "", nil
 }
