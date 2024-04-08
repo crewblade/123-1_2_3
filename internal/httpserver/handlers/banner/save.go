@@ -32,6 +32,7 @@ type BannerSaver interface {
 	) (int, error)
 }
 
+// TODO: Отделить internal error от incorrect request (в случае если какой то из req-параметров не задан)
 func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProvider) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "internal.httpserver.handlers.banner.SaveBanner"

@@ -19,7 +19,31 @@ func (s *Storage) SaveBanner(
 	content string,
 	isActive bool,
 ) (int, error) {
-	return 1, nil
+	const op = "repo.postgres.GetUserBanner"
+	const errValue = -1
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return errValue, fmt.Errorf("%s: begin transaction: %w", op, err)
+	}
+	stmt, err := s.db.PrepareContext(ctx, "INSERT INTO banners(tag_ids, feature_id, content, is_active) VALUES ($1, $2, $3, $4) RETURNING id")
+	if err != nil {
+		tx.Rollback()
+		return errValue, fmt.Errorf("%s: prepare statement: %w", op, err)
+	}
+	defer stmt.Close()
+
+	var bannerID int
+	err = stmt.QueryRowContext(ctx, tagIDs, featureID, content, isActive).Scan(&bannerID)
+	if err != nil {
+		tx.Rollback()
+		return errValue, fmt.Errorf("%s: execute statement: %w", op, err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return errValue, fmt.Errorf("%s: commit transaction: %w", op, err)
+	}
+
+	return bannerID, nil
 }
 func (s *Storage) DeleteBanner(ctx context.Context, bannerID int) error {
 	return nil
@@ -43,9 +67,9 @@ func (s *Storage) GetUserBanner(
 
 	const op = "repo.postgres.GetUserBanner"
 
-	stmt, err := s.db.Prepare("SELECT content, is_active FROM banners WHERE feature_id = $1 AND $2 = ANY(tag_ids)")
+	stmt, err := s.db.PrepareContext(ctx, "SELECT content, is_active FROM banners WHERE feature_id = $1 AND $2 = ANY(tag_ids)")
 	if err != nil {
-		return "", false, fmt.Errorf("%s: %w", op, err)
+		return "", false, fmt.Errorf("%s: prepare context %w", op, err)
 	}
 	defer stmt.Close()
 
@@ -55,10 +79,10 @@ func (s *Storage) GetUserBanner(
 	err = row.Scan(&content, &isActive)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", false, fmt.Errorf("%s: %f", op, errs.ErrBannerNotFound)
+			return "", false, fmt.Errorf("%s: row scan %f", op, errs.ErrBannerNotFound)
 		}
 
-		return "", false, fmt.Errorf("%s: %w", op, err)
+		return "", false, fmt.Errorf("%s: row scan %w", op, err)
 	}
 
 	return content, isAdmin, nil
