@@ -20,7 +20,7 @@ type ResponseGet struct {
 }
 
 type UserBannerGetter interface {
-	GetUserBanner(ctx context.Context, tagID int, featureID int, isAdmin bool) (string, error)
+	GetUserBanner(ctx context.Context, tagID int, featureID int, isAdmin bool) (string, bool, error)
 }
 type UserProvider interface {
 	IsAdmin(ctx context.Context, token string) (bool, error)
@@ -61,15 +61,16 @@ func GetUserBanner(
 
 		isAdmin, err := userProvider.IsAdmin(r.Context(), token)
 		if err != nil {
-			log.Error("Invalid token: ", sl.Err(err))
+			log.Error("In: ", sl.Err(err))
 			render.JSON(w, r, response.NewError(http.StatusUnauthorized, "User is not authorized"))
 			return
 		}
 		var bannerContent string
+		var bannerIsActive bool
 		if useLastRevision {
 			//banner, err = cache.GetUserBanner()
 		} else {
-			bannerContent, err = userBannerGetter.GetUserBanner(r.Context(), tagID, featureID, isAdmin)
+			bannerContent, bannerIsActive, err = userBannerGetter.GetUserBanner(r.Context(), tagID, featureID, isAdmin)
 			if err != nil {
 				if errors.Is(err, errs.ErrBannerNotFound) {
 					log.Error("Banner is not found", sl.Err(err))
@@ -81,6 +82,10 @@ func GetUserBanner(
 				return
 			}
 
+		}
+		if !isAdmin && !bannerIsActive {
+			log.Error("User have no access to inactive banner")
+			render.JSON(w, r, response.NewError(http.StatusForbidden, errs.ErrUserDoesNotHaveAccess.Error()))
 		}
 		render.JSON(w, r, ResponseGet{
 			response.NewSuccess(200),
