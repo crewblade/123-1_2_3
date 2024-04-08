@@ -23,7 +23,13 @@ type ResponseSave struct {
 }
 
 type BannerSaver interface {
-	SaveBanner(ctx context.Context, tagIDs []int, featureID int) (int, error)
+	SaveBanner(
+		ctx context.Context,
+		tagIDs []int,
+		featureID int,
+		content map[string]string,
+		isActive bool
+	) (int, error)
 }
 
 func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProvider) http.HandlerFunc {
@@ -42,7 +48,7 @@ func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProv
 			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
 			return
 		}
-
+		log.Info("req", slog.Any("req", req))
 		token := r.Header.Get("token")
 		log.With("token", token)
 
@@ -58,6 +64,24 @@ func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProv
 			render.JSON(w, r, response.NewError(http.StatusForbidden, "User have no access"))
 			return
 		}
+
+		bannerID, err := bannerSaver.SaveBanner(
+			r.Context(),
+			req.TagIDs,
+			req.FeatureID,
+			req.Content,
+			req.IsActive,
+			)
+		if err != nil{
+			log.Error("Internal error", sl.Err(err))
+			render.JSON(w, r, response.NewError(http.StatusInternalServerError, "Internal error"))
+			return
+		}
+
+		render.JSON(w, r, ResponseSave{
+			response.NewSuccess(http.StatusCreated),
+			bannerID,
+		})
 
 	}
 
