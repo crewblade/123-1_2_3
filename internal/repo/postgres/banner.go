@@ -20,7 +20,7 @@ func (s *Storage) SaveBanner(
 	content string,
 	isActive bool,
 ) (int, error) {
-	const op = "repo.postgres.GetUserBanner"
+	const op = "repo.postgres.SaveBanner"
 	const errValue = -1
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -64,7 +64,6 @@ func (s *Storage) GetUserBanner(
 	ctx context.Context,
 	tagID int,
 	featureID int,
-	isAdmin bool,
 ) (string, bool, error) {
 
 	const op = "repo.postgres.GetUserBanner"
@@ -87,6 +86,6 @@ func (s *Storage) GetUserBanner(
 		return "", false, fmt.Errorf("%s: row scan %w", op, err)
 	}
 
-	return content, isAdmin, nil
+	return content, isActive, nil
 
 }
