@@ -2,7 +2,6 @@ package banner_id
 
 import (
 	"context"
-	"github.com/crewblade/banner-management-service/internal/domain/models"
 	"github.com/crewblade/banner-management-service/internal/lib/api/response"
 	"github.com/crewblade/banner-management-service/internal/lib/logger/sl"
 	"github.com/go-chi/chi/v5/middleware"
@@ -12,10 +11,10 @@ import (
 )
 
 type RequestUpdate struct {
-	TagIDs    []int                `json:"tag_ids"`
-	FeatureID int                  `json:"feature_id"`
-	Content   models.BannerContent `json:"content"`
-	IsActive  bool                 `json:"is_active"`
+	TagIDs    []int             `json:"tag_ids"`
+	FeatureID int               `json:"feature_id"`
+	Content   map[string]string `json:"content"`
+	IsActive  bool              `json:"is_active"`
 }
 
 type ResponseUpdate struct {

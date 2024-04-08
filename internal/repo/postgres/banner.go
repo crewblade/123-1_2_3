@@ -17,6 +17,6 @@ func (s *Storage) DeleteBanner(ctx context.Context, bannerID int) error {
 func (s *Storage) UpdateBanner(ctx context.Context) {
 
 }
-func (s *Storage) GetUserBanner(ctx context.Context, tagID int, featureID int) (models.BannerContent, error) {
-	return models.BannerContent{}, nil
+func (s *Storage) GetUserBanner(ctx context.Context, tagID int, featureID int) (map[string]string, error) {
+	return nil, nil
 }

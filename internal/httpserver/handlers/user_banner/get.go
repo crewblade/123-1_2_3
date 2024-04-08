@@ -3,7 +3,6 @@ package user_banner
 import (
 	"context"
 	"errors"
-	"github.com/crewblade/banner-management-service/internal/domain/models"
 	"github.com/crewblade/banner-management-service/internal/lib/api/errs"
 	"github.com/crewblade/banner-management-service/internal/lib/api/response"
 	"github.com/crewblade/banner-management-service/internal/lib/logger/sl"
@@ -17,11 +16,11 @@ import (
 
 type ResponseGet struct {
 	response.Response
-	models.BannerContent
+	Content map[string]string `json:"content"`
 }
 
 type UserBannerGetter interface {
-	GetUserBanner(ctx context.Context, tagID int, featureID int) (models.BannerContent, error)
+	GetUserBanner(ctx context.Context, tagID int, featureID int) (map[string]string, error)
 }
 type UserProvider interface {
 	IsAdmin(ctx context.Context, token string) (bool, error)
@@ -66,11 +65,11 @@ func GetUserBanner(
 			render.JSON(w, r, response.NewError(http.StatusUnauthorized, "User is not authorized"))
 			return
 		}
-		var banner models.BannerContent
+		bannerContent := make(map[string]string)
 		if useLastRevision {
 			//banner, err = cache.GetUserBanner()
 		} else {
-			banner, err = userBannerGetter.GetUserBanner(r.Context(), tagID, featureID)
+			bannerContent, err = userBannerGetter.GetUserBanner(r.Context(), tagID, featureID)
 			if err != nil {
 				if errors.Is(err, errs.ErrBannerNotFound) {
 					log.Error("Banner is not found", sl.Err(err))
@@ -85,7 +84,7 @@ func GetUserBanner(
 		}
 		render.JSON(w, r, ResponseGet{
 			response.NewSuccess(200),
-			banner,
+			bannerContent,
 		})
 	}
 

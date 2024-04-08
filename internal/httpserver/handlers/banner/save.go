@@ -2,7 +2,6 @@ package banner
 
 import (
 	"context"
-	"github.com/crewblade/banner-management-service/internal/domain/models"
 	"github.com/crewblade/banner-management-service/internal/lib/api/response"
 	"github.com/crewblade/banner-management-service/internal/lib/logger/sl"
 	"github.com/go-chi/chi/v5/middleware"
@@ -12,10 +11,10 @@ import (
 )
 
 type RequestSave struct {
-	TagIDs    []int                `json:"tag_ids"`
-	FeatureID int                  `json:"feature_id"`
-	Content   models.BannerContent `json:"content"`
-	IsActive  bool                 `json:"is_active"`
+	TagIDs    []int             `json:"tag_ids"`
+	FeatureID int               `json:"feature_id"`
+	Content   map[string]string `json:"content"`
+	IsActive  bool              `json:"is_active"`
 }
 
 type ResponseSave struct {
@@ -24,7 +23,7 @@ type ResponseSave struct {
 }
 
 type BannerSaver interface {
-	SaveBanner(ctx context.Context) (int, error)
+	SaveBanner(ctx context.Context, tagIDs []int, featureID int) (int, error)
 }
 
 func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProvider) http.HandlerFunc {
@@ -41,7 +40,6 @@ func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProv
 			log.Error("failed to decode request body", sl.Err(err))
 
 			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
-
 			return
 		}
 
