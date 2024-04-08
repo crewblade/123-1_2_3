@@ -47,7 +47,7 @@ func DeleteBanner(
 		}
 
 		if !isAdmin {
-			log.Error("User have no access", sl.Err(err))
+			log.Error("User have no access")
 			render.JSON(w, r, response.NewError(http.StatusForbidden, "User have no access"))
 			return
 		}
@@ -70,7 +70,7 @@ func DeleteBanner(
 				render.JSON(w, r, response.NewError(http.StatusInternalServerError, "Internal error"))
 			}
 		}
-
+		log.Info("Successful delete")
 		render.JSON(w, r, response.NewSuccess(http.StatusOK))
 
 	}

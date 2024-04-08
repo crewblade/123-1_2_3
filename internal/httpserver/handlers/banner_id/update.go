@@ -36,6 +36,7 @@ type BannerUpdater interface {
 	) error
 }
 
+// TODO: Validate (nullable request params)
 func UpdateBanner(
 	log *slog.Logger,
 	bannerUpdater BannerUpdater,
@@ -76,7 +77,7 @@ func UpdateBanner(
 		}
 
 		if !isAdmin {
-			log.Error("User have no access", sl.Err(err))
+			log.Error("User have no access")
 			render.JSON(w, r, response.NewError(http.StatusForbidden, "User have no access"))
 			return
 		}
@@ -101,6 +102,7 @@ func UpdateBanner(
 			}
 		}
 
+		log.Info("Successful update", slog.Any("Updated banner", req))
 		render.JSON(w, r, response.NewSuccess(http.StatusOK))
 	}
 
