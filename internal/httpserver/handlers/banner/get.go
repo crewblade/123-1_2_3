@@ -11,13 +11,6 @@ import (
 	"net/http"
 )
 
-type RequestGet struct {
-	TagID           int  `json:"tag_id,omitempty"`
-	FeatureID       int  `json:"feature_id,omitempty"`
-	UseLastRevision bool `json:"use_last_revision,omitempty"`
-	Limit           int  `json:"limit,omitempty"`
-	Offset          int  `json:"offset,omitempty"`
-}
 type ResponseGet struct {
 	response.Response
 	Banners []models.Banner `json:"items"`
@@ -45,6 +38,19 @@ func GetBanners(
 		token := r.Header.Get("token")
 		log.With("token", token)
 
+		//TODO:FIX UNREQUIRED LOGIC
+		//var tagID, featureID, limit, offset *int
+
+		//tagIDStr := chi.URLParam(r, "tag_id")
+		//if tagIDStr != "" {
+		//	tagID, err := strconv.Atoi(tagIDStr)
+		//	if err != nil {
+		//		log.Error("error converting tagID", sl.Err(err))
+		//		render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
+		//		return
+		//	}
+		//}
+
 		isAdmin, err := userProvider.IsAdmin(r.Context(), token)
 		if err != nil {
 			log.Error("Invalid token: ", sl.Err(err))
@@ -58,32 +64,20 @@ func GetBanners(
 			return
 		}
 
-		var req RequestGet
-		err = render.DecodeJSON(r.Body, &req)
-
+		banners, err := bannersGetter.GetBanners(r.Context())
 		if err != nil {
-			log.Error("failed to decode request body", sl.Err(err))
-
-			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
+			log.Error("Internal error:", sl.Err(err))
+			render.JSON(w, r, response.NewError(http.StatusInternalServerError, "Internal error"))
 
 			return
+
 		}
 
-		//banners, err := bannersGetter.GetBanners(r.Context(), )
-		//if err != nil {
-		//	log.Error("Internal error:", sl.Err(err))
-		//	render.JSON(w, r, response.NewError(http.StatusInternalServerError, "Internal error"))
-		//
-		//	return
-		//
-		//}
-		//
-		//log.Info("get banners:", banners)
-		//render.JSON(w, r, ResponseGet{
-		//	response.NewSuccess(200),
-		//	banners,
-		//})
-		render.JSON(w, r, response.NewSuccess(200))
+		log.Info("get banners:", banners)
+		render.JSON(w, r, ResponseGet{
+			response.NewSuccess(200),
+			banners,
+		})
 	}
 
 }
