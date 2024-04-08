@@ -20,8 +20,15 @@ func (s *Storage) SaveBanner(
 func (s *Storage) DeleteBanner(ctx context.Context, bannerID int) error {
 	return nil
 }
-func (s *Storage) UpdateBanner(ctx context.Context) {
-
+func (s *Storage) UpdateBanner(
+	ctx context.Context,
+	bannerID int,
+	tagIDs []int,
+	featureID int,
+	content map[string]string,
+	isActive bool,
+) error {
+	return nil
 }
 func (s *Storage) GetUserBanner(
 	ctx context.Context,

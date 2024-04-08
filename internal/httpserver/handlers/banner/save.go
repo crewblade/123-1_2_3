@@ -28,7 +28,7 @@ type BannerSaver interface {
 		tagIDs []int,
 		featureID int,
 		content map[string]string,
-		isActive bool
+		isActive bool,
 	) (int, error)
 }
 
@@ -40,6 +40,7 @@ func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProv
 		log = log.With("request_id", middleware.GetReqID(r.Context()))
 
 		var req RequestSave
+		// TODO: required all params
 		err := render.DecodeJSON(r.Body, &req)
 
 		if err != nil {
@@ -71,8 +72,8 @@ func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProv
 			req.FeatureID,
 			req.Content,
 			req.IsActive,
-			)
-		if err != nil{
+		)
+		if err != nil {
 			log.Error("Internal error", sl.Err(err))
 			render.JSON(w, r, response.NewError(http.StatusInternalServerError, "Internal error"))
 			return

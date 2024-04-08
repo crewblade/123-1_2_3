@@ -2,12 +2,16 @@ package banner_id
 
 import (
 	"context"
+	"errors"
+	"github.com/crewblade/banner-management-service/internal/lib/api/errs"
 	"github.com/crewblade/banner-management-service/internal/lib/api/response"
 	"github.com/crewblade/banner-management-service/internal/lib/logger/sl"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"log/slog"
 	"net/http"
+	"strconv"
 )
 
 type RequestUpdate struct {
@@ -22,7 +26,14 @@ type ResponseUpdate struct {
 }
 
 type BannerUpdater interface {
-	UpdateBanner(ctx context.Context)
+	UpdateBanner(
+		ctx context.Context,
+		bannerID int,
+		tagIDs []int,
+		featureID int,
+		content map[string]string,
+		isActive bool,
+	) error
 }
 
 func UpdateBanner(
@@ -47,6 +58,13 @@ func UpdateBanner(
 			return
 		}
 
+		bannerID, err := strconv.Atoi(chi.URLParam(r, "id"))
+		if err != nil {
+			log.Error("error converting bannerID from URLParam", sl.Err(err))
+			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Invalid data"))
+			return
+		}
+
 		token := r.Header.Get("token")
 		log.With("token", token)
 
@@ -63,6 +81,27 @@ func UpdateBanner(
 			return
 		}
 
+		err = bannerUpdater.UpdateBanner(
+			r.Context(),
+			bannerID,
+			req.TagIDs,
+			req.FeatureID,
+			req.Content,
+			req.IsActive,
+		)
+
+		if err != nil {
+			if errors.Is(err, errs.ErrBannerNotFound) {
+				log.Error("Banner is not found", sl.Err(err))
+				render.JSON(w, r, response.NewError(http.StatusNotFound, "Banner is not found"))
+				return
+			} else {
+				log.Error("Internal error", sl.Err(err))
+				render.JSON(w, r, response.NewError(http.StatusInternalServerError, "Internal error"))
+			}
+		}
+
+		render.JSON(w, r, response.NewSuccess(http.StatusOK))
 	}
 
 }
