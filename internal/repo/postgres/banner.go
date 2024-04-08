@@ -46,6 +46,7 @@ func (s *Storage) SaveBanner(
 	return bannerID, nil
 }
 
+// TODO: Возможно стоит проверять, существует ли вообще такой айдишник (result.RowsAffected)
 func (s *Storage) DeleteBanner(ctx context.Context, bannerID int) error {
 	const op = "repo.postgres.DeleteBanner"
 
@@ -72,6 +73,8 @@ func (s *Storage) DeleteBanner(ctx context.Context, bannerID int) error {
 
 	return nil
 }
+
+// TODO: Возможно стоит проверять, существует ли вообще такой айдишник (result.RowsAffected)
 func (s *Storage) UpdateBanner(
 	ctx context.Context,
 	bannerID int,

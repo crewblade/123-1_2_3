@@ -21,14 +21,21 @@ type ResponseGet struct {
 type UserBannerGetter interface {
 	GetUserBanner(ctx context.Context, tagID int, featureID int) (string, bool, error)
 }
+
 type UserProvider interface {
 	IsAdmin(ctx context.Context, token string) (bool, error)
+}
+
+type BannerCache interface {
+	GetBannerContent(ctx context.Context, tagID, featureID int) (string, bool, error)
+	SetBannerContent(ctx context.Context, tagID, featureID int, content string, isActive bool) error
 }
 
 func GetUserBanner(
 	log *slog.Logger,
 	userBannerGetter UserBannerGetter,
 	userProvider UserProvider,
+	bannerCache BannerCache,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "internal.httpserver.handlers.user_banner.GetUserBanner"
@@ -48,6 +55,7 @@ func GetUserBanner(
 			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
 			return
 		}
+
 		useLastRevision := false
 		useLastRevisionStr := r.URL.Query().Get("use_last_revision")
 		if useLastRevisionStr == "true" {
@@ -69,9 +77,16 @@ func GetUserBanner(
 		}
 		var bannerContent string
 		var bannerIsActive bool
+		isCacheUsed := false
 		if !useLastRevision {
-			//banner, err = cache.GetUserBanner()
-		} else {
+			bannerContent, bannerIsActive, err = bannerCache.GetBannerContent(r.Context(), tagID, featureID)
+			if err != nil {
+				log.Error("Error fetching banner content from cache", sl.Err(err))
+			} else {
+				isCacheUsed = true
+			}
+		}
+		if useLastRevision || !isCacheUsed {
 			bannerContent, bannerIsActive, err = userBannerGetter.GetUserBanner(r.Context(), tagID, featureID)
 			if err != nil {
 				if errors.Is(err, errs.ErrBannerNotFound) {
@@ -83,7 +98,10 @@ func GetUserBanner(
 				render.JSON(w, r, response.NewError(http.StatusInternalServerError, "Intrenal error"))
 				return
 			}
-
+			err := bannerCache.SetBannerContent(r.Context(), tagID, featureID, bannerContent, bannerIsActive)
+			if err != nil {
+				log.Error("Error setting banner content in cache", sl.Err(err))
+			}
 		}
 		if !isAdmin && !bannerIsActive {
 			log.Error("User have no access to inactive banner")

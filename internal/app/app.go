@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"github.com/crewblade/banner-management-service/config"
+	"github.com/crewblade/banner-management-service/internal/cache"
 	"github.com/crewblade/banner-management-service/internal/httpserver"
 	"github.com/crewblade/banner-management-service/internal/httpserver/handlers/banner"
 	"github.com/crewblade/banner-management-service/internal/httpserver/handlers/banner_id"
@@ -15,6 +16,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func Run(configPath string) {
@@ -33,6 +35,8 @@ func Run(configPath string) {
 		log.Error("failed to init postgres", sl.Err(err))
 		os.Exit(1)
 	}
+	log.Info("Initializing cache...")
+	cache := cache.NewBannerCacheImpl(5*time.Minute, 10*time.Minute)
 
 	log.Info("Initializing handlers and routes...")
 
@@ -41,7 +45,7 @@ func Run(configPath string) {
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Recoverer)
 
-	router.Get("/user_banner", user_banner.GetUserBanner(log, storage, storage))
+	router.Get("/user_banner", user_banner.GetUserBanner(log, storage, storage, cache))
 	router.Get("/banner", banner.GetBanners(log, storage, storage))
 	router.Post("/banner", banner.SaveBanner(log, storage, storage))
 	router.Patch("/banner/{id}", banner_id.UpdateBanner(log, storage, storage))
