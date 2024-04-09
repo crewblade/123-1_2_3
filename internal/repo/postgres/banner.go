@@ -7,12 +7,63 @@ import (
 	"fmt"
 	"github.com/crewblade/banner-management-service/internal/domain/models"
 	"github.com/crewblade/banner-management-service/internal/lib/api/errs"
+	"github.com/crewblade/banner-management-service/internal/lib/utils"
 	"github.com/lib/pq"
 )
 
-func (s *Storage) GetBanners(ctx context.Context) ([]models.Banner, error) {
-	return nil, nil
+func (s *Storage) GetBanners(ctx context.Context, featureID, tagID, limit, offset *int) ([]models.Banner, error) {
+	const op = "repo.postgres.GetBanners"
+
+	stmt, err := s.db.PrepareContext(ctx, `
+    SELECT id, content, feature_id, tag_ids, is_active, created_at, updated_at
+	FROM banners 
+	WHERE (feature_id = $1 OR $1 IS NULL) 
+		AND ($2 = ANY(tag_ids) OR $2 IS NULL) 
+	LIMIT $3 OFFSET $4;
+    `)
+	if err != nil {
+		return nil, fmt.Errorf("%s: prepare context %w", op, err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx, featureID, tagID, *limit, *offset)
+	if err != nil {
+		return nil, fmt.Errorf("%s: query context %w", op, err)
+	}
+	defer rows.Close()
+
+	var banners []models.Banner
+	for rows.Next() {
+		var banner models.Banner
+		var tagIDsString string
+		err := rows.Scan(
+			&banner.BannerID,
+			&banner.Content,
+			&banner.FeatureID,
+			&tagIDsString,
+			&banner.IsActive,
+			&banner.CreatedAt,
+			&banner.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("%s: scan row %w", op, err)
+		}
+		tagIDs, err := utils.StringToIntArray(tagIDsString)
+		if err != nil {
+			return nil, fmt.Errorf("%s: error parsing tag IDs: %w", op, err)
+		}
+		banner.TagIDs = tagIDs
+		banners = append(banners, banner)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: rows error %w", op, err)
+	}
+
+	return banners, nil
+
 }
+
 func (s *Storage) SaveBanner(
 	ctx context.Context,
 	tagIDs []int,
