@@ -84,7 +84,6 @@ func GetUserBanner(
 			if err != nil {
 				log.Error("Error fetching banner content from cache", sl.Err(err))
 			} else {
-				log.Info("Data from cache:", slog.Any("bannerContent", bannerContent), slog.Any("bannerIsActive", bannerIsActive))
 				isCacheUsed = true
 			}
 		}
