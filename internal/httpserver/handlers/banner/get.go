@@ -27,6 +27,11 @@ type UserProvider interface {
 	IsAdmin(ctx context.Context, token string) (bool, error)
 }
 
+type BannersCache interface {
+	GetBanners(ctx context.Context, tagID, featureID int) (string, bool, error)
+	SetBanners(ctx context.Context, tagID, featureID int, content string, isActive bool) error
+}
+
 func GetBanners(
 	log *slog.Logger,
 	bannersGetter BannersGetter,
