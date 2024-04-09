@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/crewblade/banner-management-service/internal/lib/api/errs"
 	"github.com/crewblade/banner-management-service/internal/lib/api/response"
+	"github.com/crewblade/banner-management-service/internal/lib/api/validator"
 	"github.com/crewblade/banner-management-service/internal/lib/logger/sl"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -62,7 +63,14 @@ func UpdateBanner(
 		bannerID, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
 			log.Error("error converting bannerID from URLParam", sl.Err(err))
-			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Invalid data"))
+			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
+			return
+		}
+
+		if !validator.IsValidData(req.FeatureID, req.TagIDs) {
+			log.Error("Invalid request", slog.Any("req", req))
+
+			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
 			return
 		}
 

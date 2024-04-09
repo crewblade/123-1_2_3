@@ -3,6 +3,7 @@ package banner
 import (
 	"context"
 	"github.com/crewblade/banner-management-service/internal/lib/api/response"
+	"github.com/crewblade/banner-management-service/internal/lib/api/validator"
 	"github.com/crewblade/banner-management-service/internal/lib/logger/sl"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
@@ -41,11 +42,16 @@ func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProv
 		log = log.With("request_id", middleware.GetReqID(r.Context()))
 
 		var req RequestSave
-		// TODO: required all params
 		err := render.DecodeJSON(r.Body, &req)
 
 		if err != nil {
 			log.Error("failed to decode request body", sl.Err(err))
+
+			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
+			return
+		}
+		if !validator.IsValidData(req.FeatureID, req.TagIDs) {
+			log.Error("Invalid request", slog.Any("req", req))
 
 			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
 			return
