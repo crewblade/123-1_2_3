@@ -46,7 +46,7 @@ func Run(configPath string) {
 	router.Use(middleware.Recoverer)
 
 	router.Get("/user_banner", user_banner.GetUserBanner(log, storage, storage, cache))
-	router.Get("/banner", banner.GetBanners(log, storage, storage))
+	router.Get("/banner", banner.GetBanners(log, storage, storage, cache))
 	router.Post("/banner", banner.SaveBanner(log, storage, storage))
 	router.Patch("/banner/{id}", banner_id.UpdateBanner(log, storage, storage))
 	router.Delete("/banner/{id}", banner_id.DeleteBanner(log, storage, storage))

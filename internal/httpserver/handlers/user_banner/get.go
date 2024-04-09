@@ -3,6 +3,7 @@ package user_banner
 import (
 	"context"
 	"errors"
+	"github.com/crewblade/banner-management-service/internal/domain/models"
 	"github.com/crewblade/banner-management-service/internal/lib/api/errs"
 	"github.com/crewblade/banner-management-service/internal/lib/api/response"
 	"github.com/crewblade/banner-management-service/internal/lib/logger/sl"
@@ -27,8 +28,8 @@ type UserProvider interface {
 }
 
 type BannerCache interface {
-	GetBannerContent(ctx context.Context, tagID, featureID int) (string, bool, error)
-	SetBannerContent(ctx context.Context, tagID, featureID int, content string, isActive bool) error
+	GetBanner(ctx context.Context, tagID, featureID int) (string, bool, error)
+	SetBanner(ctx context.Context, tagID, featureID int, banner *models.BannerForUser) error
 }
 
 func GetUserBanner(
@@ -79,10 +80,11 @@ func GetUserBanner(
 		var bannerIsActive bool
 		isCacheUsed := false
 		if !useLastRevision {
-			bannerContent, bannerIsActive, err = bannerCache.GetBannerContent(r.Context(), tagID, featureID)
+			bannerContent, bannerIsActive, err = bannerCache.GetBanner(r.Context(), tagID, featureID)
 			if err != nil {
 				log.Error("Error fetching banner content from cache", sl.Err(err))
 			} else {
+				log.Info("Data from cache:", slog.Any("bannerContent", bannerContent), slog.Any("bannerIsActive", bannerIsActive))
 				isCacheUsed = true
 			}
 		}
@@ -98,9 +100,16 @@ func GetUserBanner(
 				render.JSON(w, r, response.NewError(http.StatusInternalServerError, "Intrenal error"))
 				return
 			}
-			err := bannerCache.SetBannerContent(r.Context(), tagID, featureID, bannerContent, bannerIsActive)
+			err := bannerCache.SetBanner(r.Context(), tagID, featureID, &models.BannerForUser{bannerContent, bannerIsActive})
 			if err != nil {
 				log.Error("Error setting banner content in cache", sl.Err(err))
+			} else {
+				log.Info(
+					"Data cached:",
+					slog.Any("bannerContent", bannerContent),
+					slog.Any("bannerIsActive", bannerIsActive),
+					slog.Any("tagID", tagID),
+					slog.Any("featureID", featureID))
 			}
 		}
 		if !isAdmin && !bannerIsActive {

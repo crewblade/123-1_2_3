@@ -9,3 +9,7 @@ type Banner struct {
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }
+type BannerForUser struct {
+	Content  string `json:"content"`
+	IsActive bool   `json:"is_active"`
+}

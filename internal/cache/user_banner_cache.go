@@ -2,8 +2,9 @@ package cache
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
 	"fmt"
+	"github.com/crewblade/banner-management-service/internal/domain/models"
 	"time"
 
 	"github.com/patrickmn/go-cache"
@@ -18,15 +19,29 @@ func NewBannerCacheImpl(defaultExpiration, cleanupInterval time.Duration) *Banne
 	return &BannerCacheImpl{cache: c}
 }
 
-func (bc *BannerCacheImpl) GetBannerContent(ctx context.Context, tagID, featureID int) (string, bool, error) {
-	content, ok := bc.cache.Get(fmt.Sprintf("%d_%d", tagID, featureID))
-	if !ok {
-		return "", false, errors.New("content is not found in cache")
+func (bc *BannerCacheImpl) GetBanner(ctx context.Context, tagID, featureID int) (string, bool, error) {
+	key := fmt.Sprintf("%d_%d", tagID, featureID)
+	data, found := bc.cache.Get(key)
+	if !found {
+		return "", false, fmt.Errorf("banner is not found in cache")
 	}
-	return content.(string), true, nil
+
+	var banner models.BannerForUser
+	err := json.Unmarshal(data.([]byte), &banner)
+	if err != nil {
+		return "", false, fmt.Errorf("error unmarshalling banner from cache: %w", err)
+	}
+
+	return banner.Content, banner.IsActive, nil
 }
 
-func (bc *BannerCacheImpl) SetBannerContent(ctx context.Context, tagID, featureID int, content string, isActive bool) error {
-	bc.cache.Set(fmt.Sprintf("%d_%d", tagID, featureID), content, cache.DefaultExpiration)
+func (bc *BannerCacheImpl) SetBanner(ctx context.Context, tagID, featureID int, banner *models.BannerForUser) error {
+	key := fmt.Sprintf("%d_%d", tagID, featureID)
+	data, err := json.Marshal(banner)
+	if err != nil {
+		return fmt.Errorf("error marshalling banner: %w", err)
+	}
+
+	bc.cache.Set(key, data, cache.DefaultExpiration)
 	return nil
 }

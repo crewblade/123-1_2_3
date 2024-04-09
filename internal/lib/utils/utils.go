@@ -6,10 +6,10 @@ import (
 )
 
 func StringToIntArray(s string) ([]int, error) {
-	if len(s) < 2 { // Проверка на пустой массив "{}"
+	if len(s) < 2 {
 		return []int{}, nil
 	}
-	s = s[1 : len(s)-1] // Удаление фигурных скобок
+	s = s[1 : len(s)-1]
 	parts := strings.Split(s, ",")
 	var res []int
 	for _, part := range parts {
