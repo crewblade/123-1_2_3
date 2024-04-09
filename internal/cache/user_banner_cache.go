@@ -5,19 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/crewblade/banner-management-service/internal/domain/models"
-	"time"
-
 	"github.com/patrickmn/go-cache"
 )
-
-type BannerCacheImpl struct {
-	cache *cache.Cache
-}
-
-func NewBannerCacheImpl(defaultExpiration, cleanupInterval time.Duration) *BannerCacheImpl {
-	c := cache.New(defaultExpiration, cleanupInterval)
-	return &BannerCacheImpl{cache: c}
-}
 
 func (bc *BannerCacheImpl) GetBanner(ctx context.Context, tagID, featureID int) (string, bool, error) {
 	key := fmt.Sprintf("%d_%d", tagID, featureID)
