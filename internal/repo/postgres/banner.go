@@ -78,6 +78,15 @@ func (s *Storage) SaveBanner(
 		return errValue, fmt.Errorf("%s: begin transaction: %w", op, err)
 	}
 	defer tx.Rollback()
+
+	exists, err := s.isBannerExistsInTx(ctx, tx, featureID, tagIDs, -1)
+	if err != nil {
+		return errValue, fmt.Errorf("failed to check banner existence: %w", err)
+	}
+	if exists {
+		return errValue, fmt.Errorf("banner with the same feature_id and tag_id already exists")
+	}
+
 	stmt, err := s.db.PrepareContext(ctx, "INSERT INTO banners(tag_ids, feature_id, content, is_active) VALUES ($1, $2, $3, $4) RETURNING id")
 	if err != nil {
 		return errValue, fmt.Errorf("%s: prepare statement: %w", op, err)
@@ -97,7 +106,6 @@ func (s *Storage) SaveBanner(
 	return bannerID, nil
 }
 
-// TODO: Возможно стоит проверять, существует ли вообще такой айдишник (result.RowsAffected)
 func (s *Storage) DeleteBanner(ctx context.Context, bannerID int) error {
 	const op = "repo.postgres.DeleteBanner"
 
@@ -125,7 +133,6 @@ func (s *Storage) DeleteBanner(ctx context.Context, bannerID int) error {
 	return nil
 }
 
-// TODO: Возможно стоит проверять, существует ли вообще такой айдишник (result.RowsAffected)
 func (s *Storage) UpdateBanner(
 	ctx context.Context,
 	bannerID int,
@@ -141,6 +148,14 @@ func (s *Storage) UpdateBanner(
 		return fmt.Errorf("%s: start transaction: %w", op, err)
 	}
 	defer tx.Rollback()
+
+	exists, err := s.isBannerExistsInTx(ctx, tx, featureID, tagIDs, bannerID)
+	if err != nil {
+		return fmt.Errorf("failed to check banner existence: %w", err)
+	}
+	if exists {
+		return fmt.Errorf("banner with the same feature_id and tag_id already exists")
+	}
 
 	stmt, err := tx.PrepareContext(ctx, "UPDATE banners SET tag_ids = $1, feature_id = $2, content = $3, is_active = $4, updated_at = NOW() WHERE id = $5")
 	if err != nil {
@@ -159,6 +174,28 @@ func (s *Storage) UpdateBanner(
 
 	return nil
 }
+func (s *Storage) isBannerExistsInTx(ctx context.Context, tx *sql.Tx, featureID int, tagIDs []int, bannerID int) (bool, error) {
+	const op = "repo.postgres.isBannerExistsInTx"
+
+	query := `SELECT COUNT(*)
+FROM banners
+WHERE feature_id = $1 AND EXISTS (
+    SELECT 1
+    FROM UNNEST($2::INT[]) AS tag
+    WHERE tag = ANY(tag_ids)
+	)
+	AND id != $3;
+;
+`
+	var count int
+	err := tx.QueryRowContext(ctx, query, featureID, pq.Array(tagIDs), bannerID).Scan(&count)
+	if err != nil {
+		return false, fmt.Errorf("%s: failed to execute query: %w", op, err)
+	}
+
+	return count > 0, nil
+}
+
 func (s *Storage) GetUserBanner(
 	ctx context.Context,
 	tagID int,
