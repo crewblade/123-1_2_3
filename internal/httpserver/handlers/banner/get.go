@@ -9,7 +9,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"log/slog"
-	"math"
 	"net/http"
 	"strconv"
 )
@@ -28,8 +27,8 @@ type UserProvider interface {
 }
 
 type BannersCache interface {
-	GetBanners(ctx context.Context, featureID, tagID, limit, offset int) ([]models.Banner, error)
-	SetBanners(ctx context.Context, featureID, tagID, limit, offset int, banners []models.Banner) error
+	GetBanners(ctx context.Context, featureID, tagID, limit, offset *int) ([]models.Banner, error)
+	SetBanners(ctx context.Context, featureID, tagID, limit, offset *int, banners []models.Banner) error
 }
 
 func GetBanners(
@@ -47,24 +46,16 @@ func GetBanners(
 		token := r.Header.Get("token")
 		log.With("token", token)
 
-		//Values for cache
-		cTagID, cFeatureID, cLimit, cOffset := -1, -1, -1, -1
 		tagID, err := strToIntPtr(r.URL.Query().Get("tag_id"), log)
 		if err != nil || (tagID != nil && *tagID < 0) {
 			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
 			return
-		}
-		if tagID != nil {
-			cTagID = *tagID
 		}
 
 		featureID, err := strToIntPtr(r.URL.Query().Get("feature_id"), log)
 		if err != nil || (featureID != nil && *featureID < 0) {
 			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
 			return
-		}
-		if featureID != nil {
-			cFeatureID = *featureID
 		}
 
 		limit, err := strToIntPtr(r.URL.Query().Get("limit"), log)
@@ -73,10 +64,8 @@ func GetBanners(
 			return
 		}
 		if limit == nil {
-			maxInt := math.MaxInt
-			limit = &maxInt
-		} else {
-			cLimit = *limit
+			defaultLimit := 100
+			limit = &defaultLimit
 		}
 
 		offset, err := strToIntPtr(r.URL.Query().Get("offset"), log)
@@ -87,8 +76,6 @@ func GetBanners(
 		if offset == nil {
 			zero := 0
 			offset = &zero
-		} else {
-			cOffset = *offset
 		}
 
 		isAdmin, err := userProvider.IsAdmin(r.Context(), token)
@@ -107,7 +94,7 @@ func GetBanners(
 		var banners []models.Banner
 		isCacheUsed := false
 
-		banners, err = bannersCache.GetBanners(r.Context(), cFeatureID, cTagID, cLimit, cOffset)
+		banners, err = bannersCache.GetBanners(r.Context(), featureID, tagID, limit, offset)
 		if err != nil {
 			log.Error("Error fetching banners from cache", sl.Err(err))
 		} else {
@@ -124,7 +111,7 @@ func GetBanners(
 
 				return
 			}
-			err := bannersCache.SetBanners(r.Context(), cFeatureID, cTagID, cLimit, cOffset, banners)
+			err := bannersCache.SetBanners(r.Context(), featureID, tagID, limit, offset, banners)
 			if err != nil {
 				log.Error("Error setting banner content in cache", sl.Err(err))
 			}

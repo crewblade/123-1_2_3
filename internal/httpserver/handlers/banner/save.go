@@ -2,8 +2,8 @@ package banner
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/crewblade/banner-management-service/internal/lib/api/response"
-	"github.com/crewblade/banner-management-service/internal/lib/api/validator"
 	"github.com/crewblade/banner-management-service/internal/lib/logger/sl"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
@@ -12,10 +12,10 @@ import (
 )
 
 type RequestSave struct {
-	TagIDs    []int  `json:"tag_ids"`
-	FeatureID int    `json:"feature_id"`
-	Content   string `json:"content"`
-	IsActive  bool   `json:"is_active"`
+	TagIDs    []int           `json:"tag_ids"`
+	FeatureID int             `json:"feature_id"`
+	Content   json.RawMessage `json:"content"`
+	IsActive  bool            `json:"is_active"`
 }
 
 type ResponseSave struct {
@@ -28,12 +28,11 @@ type BannerSaver interface {
 		ctx context.Context,
 		tagIDs []int,
 		featureID int,
-		content string,
+		content json.RawMessage,
 		isActive bool,
 	) (int, error)
 }
 
-// TODO: Отделить internal error от incorrect request (в случае если какой то из req-параметров не задан)
 func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProvider) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "internal.httpserver.handlers.banner.SaveBanner"
@@ -50,12 +49,7 @@ func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProv
 			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
 			return
 		}
-		if !validator.IsValidData(req.FeatureID, req.TagIDs) {
-			log.Error("Invalid request", slog.Any("req", req))
 
-			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
-			return
-		}
 		log.Info("req", slog.Any("req", req))
 		token := r.Header.Get("token")
 		log.With("token", token)

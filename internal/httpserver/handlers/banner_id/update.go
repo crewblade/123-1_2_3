@@ -2,10 +2,10 @@ package banner_id
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/crewblade/banner-management-service/internal/lib/api/errs"
 	"github.com/crewblade/banner-management-service/internal/lib/api/response"
-	"github.com/crewblade/banner-management-service/internal/lib/api/validator"
 	"github.com/crewblade/banner-management-service/internal/lib/logger/sl"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -16,10 +16,10 @@ import (
 )
 
 type RequestUpdate struct {
-	TagIDs    []int  `json:"tag_ids"`
-	FeatureID int    `json:"feature_id"`
-	Content   string `json:"content"`
-	IsActive  bool   `json:"is_active"`
+	TagIDs    []int           `json:"tag_ids"`
+	FeatureID int             `json:"feature_id"`
+	Content   json.RawMessage `json:"content"`
+	IsActive  bool            `json:"is_active"`
 }
 
 type ResponseUpdate struct {
@@ -32,12 +32,11 @@ type BannerUpdater interface {
 		bannerID int,
 		tagIDs []int,
 		featureID int,
-		content string,
+		content json.RawMessage,
 		isActive bool,
 	) error
 }
 
-// TODO: Validate (nullable request params)
 func UpdateBanner(
 	log *slog.Logger,
 	bannerUpdater BannerUpdater,
@@ -63,13 +62,6 @@ func UpdateBanner(
 		bannerID, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
 			log.Error("error converting bannerID from URLParam", sl.Err(err))
-			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
-			return
-		}
-
-		if !validator.IsValidData(req.FeatureID, req.TagIDs) {
-			log.Error("Invalid request", slog.Any("req", req))
-
 			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
 			return
 		}
@@ -107,6 +99,7 @@ func UpdateBanner(
 			} else {
 				log.Error("Internal error", sl.Err(err))
 				render.JSON(w, r, response.NewError(http.StatusInternalServerError, "Internal error"))
+				return
 			}
 		}
 

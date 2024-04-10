@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/crewblade/banner-management-service/internal/domain/models"
@@ -68,7 +69,7 @@ func (s *Storage) SaveBanner(
 	ctx context.Context,
 	tagIDs []int,
 	featureID int,
-	content string,
+	content json.RawMessage,
 	isActive bool,
 ) (int, error) {
 	const op = "repo.postgres.SaveBanner"
@@ -79,7 +80,7 @@ func (s *Storage) SaveBanner(
 	}
 	defer tx.Rollback()
 
-	exists, err := s.isBannerExistsInTx(ctx, tx, featureID, tagIDs, -1)
+	exists, err := isBannerExistsInTx(ctx, tx, featureID, tagIDs, -1)
 	if err != nil {
 		return errValue, fmt.Errorf("failed to check banner existence: %w", err)
 	}
@@ -138,7 +139,7 @@ func (s *Storage) UpdateBanner(
 	bannerID int,
 	tagIDs []int,
 	featureID int,
-	content string,
+	content json.RawMessage,
 	isActive bool,
 ) error {
 	const op = "repo.postgres.UpdateBanner"
@@ -149,7 +150,15 @@ func (s *Storage) UpdateBanner(
 	}
 	defer tx.Rollback()
 
-	exists, err := s.isBannerExistsInTx(ctx, tx, featureID, tagIDs, bannerID)
+	existsID, err := isBannerIDExistsInTx(ctx, tx, bannerID)
+	if err != nil {
+		return fmt.Errorf("failed to check bannerID existence: %w", err)
+	}
+	if !existsID {
+		return fmt.Errorf("banner with bannerID=%d is not found", bannerID)
+	}
+
+	exists, err := isBannerExistsInTx(ctx, tx, featureID, tagIDs, bannerID)
 	if err != nil {
 		return fmt.Errorf("failed to check banner existence: %w", err)
 	}
@@ -174,7 +183,53 @@ func (s *Storage) UpdateBanner(
 
 	return nil
 }
-func (s *Storage) isBannerExistsInTx(ctx context.Context, tx *sql.Tx, featureID int, tagIDs []int, bannerID int) (bool, error) {
+
+func (s *Storage) GetUserBanner(
+	ctx context.Context,
+	tagID int,
+	featureID int,
+) (json.RawMessage, bool, error) {
+
+	const op = "repo.postgres.GetUserBanner"
+
+	stmt, err := s.db.PrepareContext(ctx, "SELECT content, is_active FROM banners WHERE feature_id = $1 AND $2 = ANY(tag_ids)")
+	if err != nil {
+		return nil, false, fmt.Errorf("%s: prepare context %w", op, err)
+	}
+	defer stmt.Close()
+
+	row := stmt.QueryRowContext(ctx, featureID, tagID)
+	var content json.RawMessage
+	var isActive bool
+	err = row.Scan(&content, &isActive)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, false, fmt.Errorf("%s: row scan %f", op, errs.ErrBannerNotFound)
+		}
+
+		return nil, false, fmt.Errorf("%s: row scan %w", op, err)
+	}
+
+	return content, isActive, nil
+
+}
+
+func isBannerIDExistsInTx(ctx context.Context, tx *sql.Tx, bannerID int) (bool, error) {
+	const op = "repo.postgres.isBannerIDExists"
+
+	var exists bool
+	err := tx.QueryRowContext(ctx, "SELECT EXISTS (SELECT 1 FROM banners WHERE id = $1)", bannerID).Scan(&exists)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+		return false, fmt.Errorf("%s: query row scan: %w", op, err)
+	}
+
+	return exists, nil
+}
+
+func isBannerExistsInTx(ctx context.Context, tx *sql.Tx, featureID int, tagIDs []int, bannerID int) (bool, error) {
 	const op = "repo.postgres.isBannerExistsInTx"
 
 	query := `SELECT COUNT(*)
@@ -194,34 +249,4 @@ WHERE feature_id = $1 AND EXISTS (
 	}
 
 	return count > 0, nil
-}
-
-func (s *Storage) GetUserBanner(
-	ctx context.Context,
-	tagID int,
-	featureID int,
-) (string, bool, error) {
-
-	const op = "repo.postgres.GetUserBanner"
-
-	stmt, err := s.db.PrepareContext(ctx, "SELECT content, is_active FROM banners WHERE feature_id = $1 AND $2 = ANY(tag_ids)")
-	if err != nil {
-		return "", false, fmt.Errorf("%s: prepare context %w", op, err)
-	}
-	defer stmt.Close()
-
-	row := stmt.QueryRowContext(ctx, featureID, tagID)
-	var content string
-	var isActive bool
-	err = row.Scan(&content, &isActive)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return "", false, fmt.Errorf("%s: row scan %f", op, errs.ErrBannerNotFound)
-		}
-
-		return "", false, fmt.Errorf("%s: row scan %w", op, err)
-	}
-
-	return content, isActive, nil
-
 }

@@ -2,6 +2,7 @@ package user_banner
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/crewblade/banner-management-service/internal/domain/models"
 	"github.com/crewblade/banner-management-service/internal/lib/api/errs"
@@ -16,11 +17,11 @@ import (
 
 type ResponseGet struct {
 	response.Response
-	Content string `json:"content"`
+	Content json.RawMessage `json:"content"`
 }
 
 type UserBannerGetter interface {
-	GetUserBanner(ctx context.Context, tagID int, featureID int) (string, bool, error)
+	GetUserBanner(ctx context.Context, tagID int, featureID int) (json.RawMessage, bool, error)
 }
 
 type UserProvider interface {
@@ -28,7 +29,7 @@ type UserProvider interface {
 }
 
 type BannerCache interface {
-	GetBanner(ctx context.Context, tagID, featureID int) (string, bool, error)
+	GetBanner(ctx context.Context, tagID, featureID int) (json.RawMessage, bool, error)
 	SetBanner(ctx context.Context, tagID, featureID int, banner *models.BannerForUser) error
 }
 
@@ -76,7 +77,7 @@ func GetUserBanner(
 			render.JSON(w, r, response.NewError(http.StatusUnauthorized, "User is not authorized"))
 			return
 		}
-		var bannerContent string
+		var bannerContent json.RawMessage
 		var bannerIsActive bool
 		isCacheUsed := false
 		if !useLastRevision {
@@ -116,7 +117,7 @@ func GetUserBanner(
 			render.JSON(w, r, response.NewError(http.StatusForbidden, errs.ErrUserDoesNotHaveAccess.Error()))
 			return
 		}
-		log.Info("Successful respnose:", slog.String("banner content", bannerContent))
+		log.Info("Successful respnose:", slog.Any("banner content", bannerContent))
 		render.JSON(w, r, ResponseGet{
 			response.NewSuccess(200),
 			bannerContent,

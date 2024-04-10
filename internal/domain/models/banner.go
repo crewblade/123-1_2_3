@@ -1,15 +1,17 @@
 package models
 
+import "encoding/json"
+
 type Banner struct {
-	BannerID  int    `json:"banner_id"`
-	TagIDs    []int  `json:"tag_ids"`
-	FeatureID int    `json:"feature_id"`
-	Content   string `json:"content"`
-	IsActive  bool   `json:"is_active"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
+	BannerID  int             `json:"banner_id"`
+	TagIDs    []int           `json:"tag_ids"`
+	FeatureID int             `json:"feature_id"`
+	Content   json.RawMessage `json:"content"`
+	IsActive  bool            `json:"is_active"`
+	CreatedAt string          `json:"created_at"`
+	UpdatedAt string          `json:"updated_at"`
 }
 type BannerForUser struct {
-	Content  string `json:"content"`
-	IsActive bool   `json:"is_active"`
+	Content  json.RawMessage `json:"content"`
+	IsActive bool            `json:"is_active"`
 }
