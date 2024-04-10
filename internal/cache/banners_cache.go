@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/crewblade/banner-management-service/internal/domain/models"
+	"github.com/crewblade/banner-management-service/internal/lib/utils"
 	"github.com/patrickmn/go-cache"
-	"strconv"
 	"strings"
 )
 
@@ -38,26 +38,12 @@ func (bc *BannerCacheImpl) SetBanners(ctx context.Context, featureID, tagID, lim
 }
 
 func buildBannersCacheKey(featureID, tagID, limit, offset *int) string {
-	keyParts := []string{}
-	if featureID != nil {
-		keyParts = append(keyParts, strconv.Itoa(*featureID))
-	} else {
-		keyParts = append(keyParts, "nil_feature")
-	}
-	if tagID != nil {
-		keyParts = append(keyParts, strconv.Itoa(*tagID))
-	} else {
-		keyParts = append(keyParts, "nil_tag")
-	}
-	if limit != nil {
-		keyParts = append(keyParts, strconv.Itoa(*limit))
-	} else {
-		keyParts = append(keyParts, "nil_limit")
-	}
-	if offset != nil {
-		keyParts = append(keyParts, strconv.Itoa(*offset))
-	} else {
-		keyParts = append(keyParts, "nil_offset")
+
+	keyParts := []string{
+		utils.IntPointertoaOrDefault(featureID, "nil_feature"),
+		utils.IntPointertoaOrDefault(tagID, "nil_tag"),
+		utils.IntPointertoaOrDefault(limit, "nil_limit"),
+		utils.IntPointertoaOrDefault(offset, "nil_offset"),
 	}
 
 	return strings.Join(keyParts, "_")

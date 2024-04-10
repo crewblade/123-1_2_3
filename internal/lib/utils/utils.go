@@ -5,6 +5,13 @@ import (
 	"strings"
 )
 
+func IntPointertoaOrDefault(value *int, defaultValue string) string {
+	if value != nil {
+		return strconv.Itoa(*value)
+	}
+	return defaultValue
+}
+
 func StringToIntArray(s string) ([]int, error) {
 	if len(s) < 2 {
 		return []int{}, nil

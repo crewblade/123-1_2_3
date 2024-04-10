@@ -155,7 +155,7 @@ func (s *Storage) UpdateBanner(
 		return fmt.Errorf("failed to check bannerID existence: %w", err)
 	}
 	if !existsID {
-		return fmt.Errorf("banner with bannerID=%d is not found", bannerID)
+		return errs.ErrBannerNotFound
 	}
 
 	exists, err := isBannerExistsInTx(ctx, tx, featureID, tagIDs, bannerID)
@@ -204,7 +204,7 @@ func (s *Storage) GetUserBanner(
 	err = row.Scan(&content, &isActive)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, false, fmt.Errorf("%s: row scan %f", op, errs.ErrBannerNotFound)
+			return nil, false, errs.ErrBannerNotFound
 		}
 
 		return nil, false, fmt.Errorf("%s: row scan %w", op, err)
