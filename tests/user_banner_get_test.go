@@ -130,7 +130,7 @@ func (s *Suite) loadCacheData() error {
 	return nil
 }
 
-func (s *Suite) TestHappyGetUserBannerFromDB() {
+func (s *Suite) TestGetUserBannerFromDB() {
 	req := httptest.NewRequest("GET", "/user_banner?tag_id=2&feature_id=1&use_last_revision=true", nil)
 	req.Header.Set("token", "admin_token")
 	w := httptest.NewRecorder()
@@ -186,7 +186,7 @@ func (s *Suite) TestGetUserBannerHaveNoAccess() {
 	r.Equal(http.StatusForbidden, int(response["status"].(float64)))
 }
 
-func (s *Suite) TestHappyGetUserBannerFromCache() {
+func (s *Suite) TestGetUserBannerFromCache() {
 	req := httptest.NewRequest("GET", "/user_banner?tag_id=2&feature_id=1&use_last_revision=false", nil)
 	req.Header.Set("token", "admin_token")
 	w := httptest.NewRecorder()
