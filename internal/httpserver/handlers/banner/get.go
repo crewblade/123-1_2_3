@@ -47,13 +47,13 @@ func GetBanners(
 		log.With("token", token)
 
 		tagID, err := strToIntPtr(r.URL.Query().Get("tag_id"), log)
-		if err != nil || (tagID != nil && *tagID < 0) {
+		if err != nil {
 			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
 			return
 		}
 
 		featureID, err := strToIntPtr(r.URL.Query().Get("feature_id"), log)
-		if err != nil || (featureID != nil && *featureID < 0) {
+		if err != nil {
 			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
 			return
 		}

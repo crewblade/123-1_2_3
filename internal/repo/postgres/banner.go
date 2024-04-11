@@ -116,6 +116,14 @@ func (s *Storage) DeleteBanner(ctx context.Context, bannerID int) error {
 	}
 	defer tx.Rollback()
 
+	existsID, err := isBannerIDExistsInTx(ctx, tx, bannerID)
+	if err != nil {
+		return fmt.Errorf("failed to check bannerID existence: %w", err)
+	}
+	if !existsID {
+		return errs.ErrBannerNotFound
+	}
+
 	stmt, err := tx.PrepareContext(ctx, "DELETE FROM banners WHERE id = $1")
 	if err != nil {
 		return fmt.Errorf("%s: prepare context: %w", op, err)
