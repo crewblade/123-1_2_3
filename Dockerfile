@@ -1,22 +1,20 @@
-FROM golang:latest AS builder
 
-WORKDIR /app
-
-COPY go.mod go.sum ./
+FROM golang:alpine as modules
+COPY go.mod go.sum /modules/
+WORKDIR /modules
 RUN go mod download
 
-COPY . .
-
-RUN ls -la
-
-RUN go build -o main .
-
-FROM alpine:latest
-
+# Step 2: Builder
+FROM golang:alpine as builder
+COPY --from=modules /go/pkg /go/pkg
+COPY . /app
 WORKDIR /app
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -tags migrate -o /bin/app ./cmd/app
 
-COPY --from=builder /app/main .
-
-EXPOSE 8080
-
-CMD ["./main"]
+# Step 3: Final
+FROM scratch
+COPY --from=builder /app/config /config
+COPY --from=builder /app/migrations /migrations
+COPY --from=builder /bin/app /app
+CMD ["/app"]

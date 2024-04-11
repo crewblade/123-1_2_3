@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
-	"github.com/joho/godotenv"
 	"path"
 	"time"
 )
@@ -40,12 +39,12 @@ type (
 func NewConfig(configPath string) (*Config, error) {
 	cfg := &Config{}
 
-	err := godotenv.Load()
-	if err != nil {
-		return nil, fmt.Errorf("errs loading .env file: ", err)
-	}
+	//err := godotenv.Load()
+	//if err != nil {
+	//	return nil, fmt.Errorf("errs loading .env file: ", err)
+	//}
 
-	err = cleanenv.ReadConfig(path.Join("./", configPath), cfg)
+	err := cleanenv.ReadConfig(path.Join("./", configPath), cfg)
 	if err != nil {
 		return nil, fmt.Errorf("errs reading config file: %w", err)
 	}
