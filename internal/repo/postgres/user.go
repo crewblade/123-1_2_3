@@ -23,3 +23,20 @@ func (s *Storage) IsAdmin(ctx context.Context, token string) (bool, error) {
 
 	return isAdmin, nil
 }
+
+func (s *Storage) AddUser(ctx context.Context, token string, isAdmin bool) error {
+	const op = "repo.postgres.AddUser"
+
+	stmt, err := s.db.PrepareContext(ctx, "INSERT INTO users (token, is_admin) VALUES ($1, $2)")
+	if err != nil {
+		return fmt.Errorf("%s: preparing statement: %w", op, err)
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx, token, isAdmin)
+	if err != nil {
+		return fmt.Errorf("%s: executing statement: %w", op, err)
+	}
+
+	return nil
+}
