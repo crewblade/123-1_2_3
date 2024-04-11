@@ -130,7 +130,7 @@ func (s *Suite) loadCacheData() error {
 	return nil
 }
 
-func (s *Suite) TestGetUserBannerFromDB() {
+func (s *Suite) TestHappyGetUserBannerFromDB() {
 	req := httptest.NewRequest("GET", "/user_banner?tag_id=2&feature_id=1&use_last_revision=true", nil)
 	req.Header.Set("token", "admin_token")
 	w := httptest.NewRecorder()
@@ -186,7 +186,7 @@ func (s *Suite) TestGetUserBannerHaveNoAccess() {
 	r.Equal(http.StatusForbidden, int(response["status"].(float64)))
 }
 
-func (s *Suite) TestGetUserBannerFromCache() {
+func (s *Suite) TestHappyGetUserBannerFromCache() {
 	req := httptest.NewRequest("GET", "/user_banner?tag_id=2&feature_id=1&use_last_revision=false", nil)
 	req.Header.Set("token", "admin_token")
 	w := httptest.NewRecorder()
@@ -240,22 +240,7 @@ func (s *Suite) TestGetUserBannerNotFoundTag() {
 }
 
 func (s *Suite) TestGetUserBannerBadRequest() {
-	req := httptest.NewRequest("GET", "/user_banner?tag_id=str&feature_id=str&use_last_revision=true", nil)
-	req.Header.Set("token", "admin_token")
-	w := httptest.NewRecorder()
-	s.handler.ServeHTTP(w, req)
-
-	r := s.Require()
-
-	var response map[string]interface{}
-	err := json.Unmarshal(w.Body.Bytes(), &response)
-	r.NoError(err)
-
-	r.Equal(http.StatusBadRequest, int(response["status"].(float64))) // Проверяем статус код в JSON-ответе
-}
-
-func (s *Suite) TestGetUserBanner() {
-	req := httptest.NewRequest("GET", "/user_banner?tag_id=str&feature_id=str&use_last_revision=true", nil)
+	req := httptest.NewRequest("GET", "/user_banner?tag_id=bad&feature_id=bad&use_last_revision=bad", nil)
 	req.Header.Set("token", "admin_token")
 	w := httptest.NewRecorder()
 	s.handler.ServeHTTP(w, req)
