@@ -7,10 +7,9 @@ import (
 	"github.com/crewblade/banner-management-service/internal/app"
 	"github.com/crewblade/banner-management-service/internal/cache"
 	"github.com/crewblade/banner-management-service/internal/domain/models"
-	"github.com/crewblade/banner-management-service/internal/httpserver/handlers/user_banner"
+	"github.com/crewblade/banner-management-service/internal/httpserver/handlers"
 	"github.com/crewblade/banner-management-service/internal/repo/postgres"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 	"os"
@@ -49,10 +48,7 @@ func (s *Suite) SetupSuite() {
 	cache := cache.NewBannerCacheImpl(5*time.Minute, 10*time.Minute)
 	log := app.SetupLogger("local")
 
-	router := chi.NewRouter()
-	router.Use(middleware.RequestID)
-	router.Use(middleware.Recoverer)
-	router.Get("/user_banner", user_banner.GetUserBanner(log, storage, storage, cache))
+	router := handlers.NewRouter(log, storage, cache)
 
 	s.handler = router
 	s.cache = cache

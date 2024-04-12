@@ -5,13 +5,9 @@ import (
 	"github.com/crewblade/banner-management-service/config"
 	"github.com/crewblade/banner-management-service/internal/cache"
 	"github.com/crewblade/banner-management-service/internal/httpserver"
-	"github.com/crewblade/banner-management-service/internal/httpserver/handlers/banner"
-	"github.com/crewblade/banner-management-service/internal/httpserver/handlers/banner_id"
-	"github.com/crewblade/banner-management-service/internal/httpserver/handlers/user_banner"
+	"github.com/crewblade/banner-management-service/internal/httpserver/handlers"
 	"github.com/crewblade/banner-management-service/internal/lib/logger/sl"
 	"github.com/crewblade/banner-management-service/internal/repo/postgres"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -40,16 +36,7 @@ func Run(configPath string) {
 
 	log.Info("Initializing handlers and routes...")
 
-	router := chi.NewRouter()
-
-	router.Use(middleware.RequestID)
-	router.Use(middleware.Recoverer)
-
-	router.Get("/user_banner", user_banner.GetUserBanner(log, storage, storage, cache))
-	router.Get("/banner", banner.GetBanners(log, storage, storage, cache))
-	router.Post("/banner", banner.SaveBanner(log, storage, storage))
-	router.Patch("/banner/{id}", banner_id.UpdateBanner(log, storage, storage))
-	router.Delete("/banner/{id}", banner_id.DeleteBanner(log, storage, storage))
+	router := handlers.NewRouter(log, storage, cache)
 
 	log.Info("Starting http server...", slog.String("addr", cfg.Addr))
 
