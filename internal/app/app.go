@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"github.com/crewblade/banner-management-service/config"
 	"github.com/crewblade/banner-management-service/internal/cache"
@@ -8,6 +9,7 @@ import (
 	"github.com/crewblade/banner-management-service/internal/httpserver/handlers"
 	"github.com/crewblade/banner-management-service/internal/lib/logger/sl"
 	"github.com/crewblade/banner-management-service/internal/repo/postgres"
+	"github.com/go-co-op/gocron/v2"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -34,6 +36,17 @@ func Run(configPath string) {
 	log.Info("Initializing cache...")
 	cache := cache.NewBannerCacheImpl(5*time.Minute, 10*time.Minute)
 
+	log.Info("Initializing scheduler...")
+	taskScheduler, err := gocron.NewScheduler()
+	if err != nil {
+		log.Error("failed to init gocron task scheduler", err)
+	}
+	ctx := context.Background()
+	err = startCleaningTask(taskScheduler, storage, log, ctx)
+	if err != nil {
+		log.Error("error in cleaning task:", err.Error())
+	}
+
 	log.Info("Initializing handlers and routes...")
 
 	router := handlers.NewRouter(log, storage, cache)
@@ -51,6 +64,7 @@ func Run(configPath string) {
 	log.Info("Configuring graceful shutdown...")
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+	taskScheduler.Start()
 
 	select {
 	case s := <-interrupt:
@@ -64,6 +78,13 @@ func Run(configPath string) {
 	err = httpServer.Shutdown()
 	if err != nil {
 		log.Error(op, sl.Err(err))
+		os.Exit(1)
+	}
+
+	err = taskScheduler.Shutdown()
+	if err != nil {
+		log.Error(op, sl.Err(err))
+		os.Exit(1)
 	}
 
 }

@@ -18,7 +18,7 @@ func (s *Storage) GetBanners(ctx context.Context, featureID, tagID, limit, offse
 	stmt, err := s.db.PrepareContext(ctx, `
     SELECT id, content, feature_id, tag_ids, is_active, created_at, updated_at
 	FROM banners 
-	WHERE (feature_id = $1 OR $1 IS NULL) 
+	WHERE not deleted AND (feature_id = $1 OR $1 IS NULL) 
 		AND ($2 = ANY(tag_ids) OR $2 IS NULL) 
 	LIMIT $3 OFFSET $4;
     `)
@@ -200,7 +200,7 @@ func (s *Storage) GetUserBanner(
 
 	const op = "repo.postgres.GetUserBanner"
 
-	stmt, err := s.db.PrepareContext(ctx, "SELECT content, is_active FROM banners WHERE feature_id = $1 AND $2 = ANY(tag_ids)")
+	stmt, err := s.db.PrepareContext(ctx, "SELECT content, is_active FROM banners WHERE feature_id = $1 AND $2 = ANY(tag_ids) AND not deleted")
 	if err != nil {
 		return nil, false, fmt.Errorf("%s: prepare context %w", op, err)
 	}
@@ -226,7 +226,7 @@ func isBannerIDExistsInTx(ctx context.Context, tx *sql.Tx, bannerID int) (bool, 
 	const op = "repo.postgres.isBannerIDExists"
 
 	var exists bool
-	err := tx.QueryRowContext(ctx, "SELECT EXISTS (SELECT 1 FROM banners WHERE id = $1)", bannerID).Scan(&exists)
+	err := tx.QueryRowContext(ctx, "SELECT EXISTS (SELECT 1 FROM banners WHERE id = $1 AND not deleted)", bannerID).Scan(&exists)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
@@ -247,7 +247,7 @@ WHERE feature_id = $1 AND EXISTS (
     FROM UNNEST($2::INT[]) AS tag
     WHERE tag = ANY(tag_ids)
 	)
-	AND id != $3;
+	AND id != $3 AND not deleted;
 ;
 `
 	var count int
@@ -257,4 +257,58 @@ WHERE feature_id = $1 AND EXISTS (
 	}
 
 	return count > 0, nil
+}
+
+func (s *Storage) DeleteBanners(ctx context.Context, featureID, tagID *int) (int, error) {
+	const op = "repo.postgres.DeleteBanners"
+
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return 0, fmt.Errorf("%s: begin transaction %w", op, err)
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.PrepareContext(ctx, `
+        UPDATE banners 
+        SET deleted = true 
+        WHERE not deleted 
+        AND (feature_id = $1 OR $1 IS NULL) 
+        AND ($2 = ANY(tag_ids) OR $2 IS NULL);
+    `)
+	if err != nil {
+		return 0, fmt.Errorf("%s: prepare context %w", op, err)
+	}
+	defer stmt.Close()
+
+	res, err := stmt.ExecContext(ctx, featureID, tagID)
+	if err != nil {
+		return 0, fmt.Errorf("%s: execute context %w", op, err)
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("%s: get rows affected %w", op, err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, fmt.Errorf("%s: commit transaction %w", op, err)
+	}
+
+	return int(rowsAffected), nil
+}
+
+func (s *Storage) CleanDeletedBanners(ctx context.Context) error {
+	const op = "repo.postgres.CleanDeletedBanners"
+
+	stmt, err := s.db.PrepareContext(ctx, "DELETE FROM banners WHERE deleted")
+	if err != nil {
+		return fmt.Errorf("%s: prepare context: %w", op, err)
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		return fmt.Errorf("%s: execute statement: %w", op, err)
+	}
+	return nil
 }
