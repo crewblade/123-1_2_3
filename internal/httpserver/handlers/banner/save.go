@@ -42,6 +42,7 @@ func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProv
 
 		var req RequestSave
 		err := render.DecodeJSON(r.Body, &req)
+		log.Info("req", slog.Any("req", req))
 
 		if err != nil {
 			log.Error("failed to decode request body", sl.Err(err))
@@ -50,7 +51,6 @@ func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProv
 			return
 		}
 
-		log.Info("req", slog.Any("req", req))
 		token := r.Header.Get("token")
 		log.With("token", token)
 

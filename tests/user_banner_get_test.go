@@ -30,6 +30,9 @@ type Suite struct {
 }
 
 const configPath = "config/config.yaml"
+const keyLocalDB = "PG_URL_LOCALHOST"
+
+//const keyDB = "PG_URL"
 
 func (s *Suite) SetupSuite() {
 
@@ -38,7 +41,7 @@ func (s *Suite) SetupSuite() {
 		s.FailNow("failed reading .env file %w", err)
 	}
 
-	storagePath := os.Getenv("PG_URL_LOCALHOST")
+	storagePath := os.Getenv(keyLocalDB)
 	fmt.Println("storagePath:", storagePath)
 	storage, err := postgres.New(storagePath)
 	if err != nil {
