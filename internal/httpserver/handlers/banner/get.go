@@ -6,11 +6,11 @@ import (
 	"github.com/crewblade/banner-management-service/internal/lib/api/errs"
 	"github.com/crewblade/banner-management-service/internal/lib/api/response"
 	"github.com/crewblade/banner-management-service/internal/lib/logger/sl"
+	"github.com/crewblade/banner-management-service/internal/lib/utils"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"log/slog"
 	"net/http"
-	"strconv"
 )
 
 type ResponseGet struct {
@@ -46,19 +46,19 @@ func GetBanners(
 		token := r.Header.Get("token")
 		log.With("token", token)
 
-		tagID, err := strToIntPtr(r.URL.Query().Get("tag_id"), log)
+		tagID, err := utils.StrToIntPtr(r.URL.Query().Get("tag_id"), log)
 		if err != nil {
 			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
 			return
 		}
 
-		featureID, err := strToIntPtr(r.URL.Query().Get("feature_id"), log)
+		featureID, err := utils.StrToIntPtr(r.URL.Query().Get("feature_id"), log)
 		if err != nil {
 			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
 			return
 		}
 
-		limit, err := strToIntPtr(r.URL.Query().Get("limit"), log)
+		limit, err := utils.StrToIntPtr(r.URL.Query().Get("limit"), log)
 		if err != nil || (limit != nil && *limit < 0) {
 			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
 			return
@@ -68,14 +68,14 @@ func GetBanners(
 			limit = &defaultLimit
 		}
 
-		offset, err := strToIntPtr(r.URL.Query().Get("offset"), log)
+		offset, err := utils.StrToIntPtr(r.URL.Query().Get("offset"), log)
 		if err != nil || (offset != nil && *offset < 0) {
 			render.JSON(w, r, response.NewError(http.StatusBadRequest, "Incorrect data"))
 			return
 		}
 		if offset == nil {
-			zero := 0
-			offset = &zero
+			defaultOffset := 0
+			offset = &defaultOffset
 		}
 
 		isAdmin, err := userProvider.IsAdmin(r.Context(), token)
@@ -130,16 +130,4 @@ func GetBanners(
 		})
 	}
 
-}
-
-func strToIntPtr(str string, log *slog.Logger) (*int, error) {
-	if str == "" {
-		return nil, nil
-	}
-	val, err := strconv.Atoi(str)
-	if err != nil {
-		log.Error("error converting value", sl.Err(err))
-		return nil, err
-	}
-	return &val, nil
 }

@@ -68,6 +68,7 @@ func DeleteBanner(
 			} else {
 				log.Error("Internal error", sl.Err(err))
 				render.JSON(w, r, response.NewError(http.StatusInternalServerError, "Internal error"))
+				return
 			}
 		}
 		log.Info("Successful delete")

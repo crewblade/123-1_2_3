@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"github.com/crewblade/banner-management-service/internal/lib/logger/sl"
+	"log/slog"
 	"strconv"
 	"strings"
 )
@@ -10,6 +12,18 @@ func IntPointertoaOrDefault(value *int, defaultValue string) string {
 		return strconv.Itoa(*value)
 	}
 	return defaultValue
+}
+
+func StrToIntPtr(str string, log *slog.Logger) (*int, error) {
+	if str == "" {
+		return nil, nil
+	}
+	val, err := strconv.Atoi(str)
+	if err != nil {
+		log.Error("error converting value", sl.Err(err))
+		return nil, err
+	}
+	return &val, nil
 }
 
 func StringToIntArray(s string) ([]int, error) {
