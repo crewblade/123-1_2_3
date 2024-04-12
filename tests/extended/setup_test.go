@@ -28,7 +28,8 @@ type Suite struct {
 
 const duratuionToClearForTest = time.Second * 15
 const configPath = "config/config.yaml"
-const keyLocalDB = "PG_URL_LOCALHOST"
+
+const keyDB = "PG_URL_LOCALHOST"
 
 //const keyDB = "PG_URL"
 
@@ -39,7 +40,7 @@ func (s *Suite) SetupSuite() {
 		s.FailNow("failed reading .env file %w", err)
 	}
 
-	storagePath := os.Getenv(keyLocalDB)
+	storagePath := os.Getenv(keyDB)
 	fmt.Println("storagePath:", storagePath)
 	storage, err := postgres.New(storagePath)
 	if err != nil {
