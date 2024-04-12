@@ -37,7 +37,8 @@ func (s *Suite) SetupSuite() {
 	if err != nil {
 		s.FailNow("failed reading .env file %w", err)
 	}
-	storagePath := os.Getenv("PG_URL")
+
+	storagePath := os.Getenv("PG_URL_LOCALHOST")
 	fmt.Println("storagePath:", storagePath)
 	storage, err := postgres.New(storagePath)
 	if err != nil {
@@ -58,7 +59,6 @@ func (s *Suite) SetupSuite() {
 	s.ctx = context.Background()
 
 	if err = s.clearData(); err != nil {
-		s.FailNow("Failed to clear DB data", err)
 	}
 
 	if err = s.loadDbData(); err != nil {

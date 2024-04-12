@@ -55,7 +55,6 @@ func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProv
 		log.With("token", token)
 
 		isAdmin, err := userProvider.IsAdmin(r.Context(), token)
-		log.Info("isAdmin:", isAdmin)
 		if err != nil {
 			log.Error("Invalid token: ", sl.Err(err))
 			render.JSON(w, r, response.NewError(http.StatusUnauthorized, "User is not authorized"))

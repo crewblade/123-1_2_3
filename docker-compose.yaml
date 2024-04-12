@@ -2,13 +2,17 @@ version: "3.8"
 
 services:
 
-  postgres:
+  db:
     container_name: postgres
     image: postgres
     volumes:
       - pg-data:/var/lib/postgresql/data
     env_file:
       - .env
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     restart: unless-stopped
@@ -21,8 +25,9 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - postgres
+      - db
     restart: unless-stopped
+
 
 volumes:
   pg-data:

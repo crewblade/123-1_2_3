@@ -32,12 +32,12 @@ func (s *Storage) ClearData(ctx context.Context) error {
 
 	_, err := s.db.ExecContext(ctx, "DELETE FROM banners")
 	if err != nil {
-		return fmt.Errorf("%s: executing delete banners query '%s': %w", op, err)
+		return fmt.Errorf("%s: executing delete banners query : %w", op, err)
 	}
 
 	_, err = s.db.ExecContext(ctx, "DELETE FROM users")
 	if err != nil {
-		return fmt.Errorf("%s: executing delete users query '%s': %w", op, err)
+		return fmt.Errorf("%s: executing delete users query: %w", op, err)
 	}
 	return nil
 

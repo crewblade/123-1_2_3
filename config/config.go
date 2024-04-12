@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/joho/godotenv"
 	"path"
 	"time"
 )
@@ -32,17 +33,14 @@ type (
 	}
 
 	PG struct {
-		URL string `env-required:"true"                      env:"PG_URL"`
+		URL string `env-required:"true"   yaml:"url" env:"PG_URL"`
 	}
 )
 
 func NewConfig(configPath string) (*Config, error) {
 	cfg := &Config{}
 
-	//err := godotenv.Load()
-	//if err != nil {
-	//	return nil, fmt.Errorf("errs loading .env file: ", err)
-	//}
+	godotenv.Load()
 
 	err := cleanenv.ReadConfig(path.Join("./", configPath), cfg)
 	if err != nil {

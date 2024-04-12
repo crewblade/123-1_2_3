@@ -5,16 +5,25 @@ export
 
 MIGRATIONS_PATH := ./migrations
 
-.PHONY: up down migrate logs
-
 up:
-	docker-compose up -d
+	docker-compose up --build -d && docker-compose logs -f
+.PHONY: up
 
 down:
-	docker-compose down
+	docker-compose down --remove-orphans
+.PHONY: down
 
-logs:
-	docker-compose logs -f
 
-migrate:
-	docker-compose run --rm migrator go run ./cmd/migrator --storage-path=$(PG_URL) --migrations-path=$(MIGRATIONS_PATH)
+migrate-up:
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' up
+.PHONY: migrate-up
+
+migrate-down:
+	echo "y" | migrate -path migrations -database '$(PG_URL)?sslmode=disable' down
+.PHONY: migrate-down
+
+test:
+	go test -v ./tests
+
+
+

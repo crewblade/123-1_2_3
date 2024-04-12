@@ -29,6 +29,8 @@ func Run(configPath string) {
 	log := SetupLogger(cfg.Log.Level)
 	log.Info("Starting app", slog.Any("cfg", cfg))
 
+	//doMigrations(log, "./migrations")
+
 	log.Info("Initializing postgres...")
 	storage, err := postgres.New(cfg.PG.URL)
 	if err != nil {

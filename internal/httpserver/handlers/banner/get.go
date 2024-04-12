@@ -123,7 +123,7 @@ func GetBanners(
 			return
 		}
 
-		log.Info("successful get banners:", banners)
+		log.Info("successful get banners:", slog.Any("banners", banners))
 		render.JSON(w, r, ResponseGet{
 			response.NewSuccess(200),
 			banners,
