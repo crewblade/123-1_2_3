@@ -23,7 +23,7 @@ migrate-down:
 .PHONY: migrate-down
 
 test:
-	go test -v ./tests
+	go test -v ./tests/extended && go test -v ./tests
 
 
 

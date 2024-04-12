@@ -1,4 +1,4 @@
-package tests
+package extended
 
 import (
 	"context"
@@ -20,13 +20,13 @@ import (
 
 type Suite struct {
 	suite.Suite
-	handler   *chi.Mux
-	cache     *cache.BannerCacheImpl
-	repo      *postgres.Storage
-	ctx       context.Context
-	bannerIDs []int
+	handler *chi.Mux
+	cache   *cache.BannerCacheImpl
+	repo    *postgres.Storage
+	ctx     context.Context
 }
 
+const duratuionToClearForTest = time.Second * 15
 const configPath = "config/config.yaml"
 const keyLocalDB = "PG_URL_LOCALHOST"
 
@@ -34,7 +34,7 @@ const keyLocalDB = "PG_URL_LOCALHOST"
 
 func (s *Suite) SetupSuite() {
 
-	err := godotenv.Load("../.env")
+	err := godotenv.Load("../../.env")
 	if err != nil {
 		s.FailNow("failed reading .env file %w", err)
 	}
@@ -80,7 +80,6 @@ func (s *Suite) clearData() error {
 // every 2nd banner is not active
 func (s *Suite) loadDbData() error {
 	isActive := true
-	bannerIDs := make([]int, 10)
 	for i := 1; i < 10; i++ {
 		b := models.Banner{
 			TagIDs:    []int{i * 2, i * 3, i * 4},
@@ -88,8 +87,7 @@ func (s *Suite) loadDbData() error {
 			Content:   json.RawMessage(`{"title":"some_title` + strconv.Itoa(i) + `","text":"some_text` + strconv.Itoa(i) + `","url":"some_url` + strconv.Itoa(i) + `"}`),
 			IsActive:  isActive,
 		}
-		id, err := s.repo.SaveBanner(s.ctx, b.TagIDs, b.FeatureID, b.Content, b.IsActive)
-		bannerIDs[i] = id
+		_, err := s.repo.SaveBanner(s.ctx, b.TagIDs, b.FeatureID, b.Content, b.IsActive)
 		if err != nil {
 			return err
 		}
@@ -107,8 +105,6 @@ func (s *Suite) loadDbData() error {
 	if err != nil {
 		return err
 	}
-
-	s.bannerIDs = bannerIDs
 
 	return nil
 }

@@ -8,15 +8,21 @@ import (
 )
 
 const (
-	durationToCleanBanners = 2 * time.Hour
-	//durationToCleanBannersLocal = 30 * time.Second
+// durationToCleanBanners = 2 * time.Hour
+// durationToCleanBannersLocal = 30 * time.Second
 )
 
 type DeletedBannersCleaner interface {
 	CleanDeletedBanners(ctx context.Context) error
 }
 
-func startCleaningTask(scheduler gocron.Scheduler, deletedBannersCleaner DeletedBannersCleaner, log *slog.Logger, ctx context.Context) error {
+func StartCleaningTask(
+	scheduler gocron.Scheduler,
+	deletedBannersCleaner DeletedBannersCleaner,
+	log *slog.Logger,
+	ctx context.Context,
+	durationToCleanBanners time.Duration,
+) error {
 	_, err := scheduler.NewJob(
 		gocron.DurationJob(durationToCleanBanners),
 		gocron.NewTask(

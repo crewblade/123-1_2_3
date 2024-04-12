@@ -42,7 +42,7 @@ func Run(configPath string) {
 		log.Error("failed to init gocron task scheduler", err)
 	}
 	ctx := context.Background()
-	err = startCleaningTask(taskScheduler, storage, log, ctx)
+	err = StartCleaningTask(taskScheduler, storage, log, ctx, 30*time.Second)
 	if err != nil {
 		log.Error("error in cleaning task:", err.Error())
 	}

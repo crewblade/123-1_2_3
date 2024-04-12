@@ -121,7 +121,7 @@ func (s *Storage) DeleteBanner(ctx context.Context, bannerID int) error {
 		return fmt.Errorf("failed to check bannerID existence: %w", err)
 	}
 	if !existsID {
-		return errs.ErrBannerNotFound
+		return errs.ErrBannerForTagNotFound
 	}
 
 	stmt, err := tx.PrepareContext(ctx, "DELETE FROM banners WHERE id = $1")

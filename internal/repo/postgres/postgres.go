@@ -42,3 +42,15 @@ func (s *Storage) ClearData(ctx context.Context) error {
 	return nil
 
 }
+
+func (s *Storage) CountRows(ctx context.Context) (int, error) {
+	const op = "repo.postgres.CountRows"
+
+	var count int
+	err := s.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM banners").Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("%s: execute query: %w", op, err)
+	}
+
+	return count, nil
+}
