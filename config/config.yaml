@@ -11,6 +11,12 @@ http:
 log:
   level: 'local'
 
+scheduler:
+  interval: '3h'
+
+cache:
+  expiration: '5m'
+
 #postgres:
 #  url: 'postgres://postgres:postgres@localhost:5432/postgres'
 
