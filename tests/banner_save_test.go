@@ -34,6 +34,7 @@ func (s *Suite) TestSaveUserBanner() {
 	err := json.Unmarshal(responseBody, &response)
 	r.NoError(err)
 
+	r.Equal(s.bannerIDs[9]+1, int(response["banner_id"].(float64)))
 	r.Equal(http.StatusCreated, int(response["status"].(float64)))
 }
 
