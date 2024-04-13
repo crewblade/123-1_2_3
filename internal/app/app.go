@@ -14,7 +14,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 )
 
 func Run(configPath string) {
@@ -34,7 +33,7 @@ func Run(configPath string) {
 		os.Exit(1)
 	}
 	log.Info("Initializing cache...")
-	cache := cache.NewBannerCacheImpl(5*time.Minute, 10*time.Minute)
+	cache := cache.NewBannerCacheImpl(cfg.Expiration, cfg.Expiration*2)
 
 	log.Info("Initializing scheduler...")
 	taskScheduler, err := gocron.NewScheduler()

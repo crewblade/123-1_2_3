@@ -15,6 +15,7 @@ type (
 		Log       `yaml:"log"`
 		PG        `yaml:"postgres"`
 		Scheduler `yaml:"scheduler"`
+		Cache     `yaml:"cache"`
 	}
 
 	App struct {
@@ -38,6 +39,9 @@ type (
 	}
 	Scheduler struct {
 		Interval time.Duration `yaml:"interval" env-default:"3h"`
+	}
+	Cache struct {
+		Expiration time.Duration `yaml:"expiration" env-default:"5m"`
 	}
 )
 
