@@ -12,7 +12,7 @@ down:
 
 
 test:
-	go test -v ./tests/extended && go test -v ./tests
+	docker-compose -f docker-compose-test.yaml up --build --abort-on-container-exit && docker-compose -f docker-compose-test.yaml down --volumes
 
 
 

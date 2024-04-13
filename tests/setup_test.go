@@ -10,6 +10,8 @@ import (
 	"github.com/crewblade/banner-management-service/internal/lib/logger/handlers/slogempty"
 	"github.com/crewblade/banner-management-service/internal/repo/postgres"
 	"github.com/go-chi/chi/v5"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 	"os"
@@ -29,7 +31,8 @@ type Suite struct {
 
 const configPath = "config/config.yaml"
 
-const keyDB = "PG_URL_LOCALHOST"
+// const keyDB = "PG_URL_LOCALHOST"
+const keyDB = "PG_URL_TEST"
 
 //const keyDB = "PG_URL"
 
@@ -57,15 +60,15 @@ func (s *Suite) SetupSuite() {
 	s.repo = storage
 	s.ctx = context.Background()
 
+	if err = s.repo.PrepareForTest(s.ctx); err != nil {
+		s.Fail("Failed to prepare db for test", err)
+	}
 	if err = s.clearData(); err != nil {
+		s.FailNow("Failed to clear DB data", err)
 	}
 
 	if err = s.loadDbData(); err != nil {
 		s.FailNow("Failed to load DB data", err)
-	}
-
-	if err = s.loadCacheData(); err != nil {
-		s.FailNow("Failed to load cache data", err)
 	}
 
 }
@@ -78,8 +81,14 @@ func (s *Suite) clearData() error {
 	return nil
 }
 
+const (
+	defaultAttempts = 20
+	defaultTimeout  = time.Second
+)
+
 // every 2nd banner is not active
 func (s *Suite) loadDbData() error {
+	s.repo.ClearData(s.ctx)
 	isActive := true
 	bannerIDs := make([]int, 10)
 	for i := 1; i < 10; i++ {
@@ -111,26 +120,6 @@ func (s *Suite) loadDbData() error {
 
 	s.bannerIDs = bannerIDs
 
-	return nil
-}
-
-func (s *Suite) loadCacheData() error {
-	var active = true
-	for i := 1; i < 10; i++ {
-		b := models.Banner{
-			TagIDs:    []int{i * 2, i * 3, i * 4},
-			FeatureID: i,
-			Content:   json.RawMessage(`{"title":"some_title` + strconv.Itoa(i) + `","text":"some_text` + strconv.Itoa(i) + `","url":"some_url` + strconv.Itoa(i) + `"}`),
-			IsActive:  active,
-		}
-		for _, id := range b.TagIDs {
-			err := s.cache.SetBanner(s.ctx, id, b.FeatureID, &models.BannerForUser{b.Content, b.IsActive})
-			if err != nil {
-				return err
-			}
-		}
-		active = !active
-	}
 	return nil
 }
 

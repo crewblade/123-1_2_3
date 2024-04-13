@@ -10,10 +10,11 @@ import (
 
 type (
 	Config struct {
-		App  `yaml:"app"`
-		HTTP `yaml:"http"`
-		Log  `yaml:"log"`
-		PG   `yaml:"postgres"`
+		App       `yaml:"app"`
+		HTTP      `yaml:"http"`
+		Log       `yaml:"log"`
+		PG        `yaml:"postgres"`
+		Scheduler `yaml:"scheduler"`
 	}
 
 	App struct {
@@ -34,6 +35,9 @@ type (
 
 	PG struct {
 		URL string `env-required:"true"   yaml:"url" env:"PG_URL"`
+	}
+	Scheduler struct {
+		Interval time.Duration `yaml:"interval" env-default:"3h"`
 	}
 )
 
