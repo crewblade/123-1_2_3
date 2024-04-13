@@ -17,6 +17,7 @@ func New(connectionString string) (*Storage, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
+
 	return &Storage{db: db}, nil
 }
 

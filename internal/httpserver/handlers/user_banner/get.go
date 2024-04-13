@@ -73,7 +73,7 @@ func GetUserBanner(
 
 		isAdmin, err := userProvider.IsAdmin(r.Context(), token)
 		if err != nil {
-			log.Error("In: ", sl.Err(err))
+			log.Error("Not authorized: ", sl.Err(err))
 			render.JSON(w, r, response.NewError(http.StatusUnauthorized, "User is not authorized"))
 			return
 		}
@@ -85,6 +85,7 @@ func GetUserBanner(
 			if err != nil {
 				log.Error("Error fetching banner content from cache", sl.Err(err))
 			} else {
+				log.Info("Get data from cache, successful")
 				isCacheUsed = true
 			}
 		}
