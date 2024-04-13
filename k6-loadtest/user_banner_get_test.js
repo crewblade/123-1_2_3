@@ -37,15 +37,13 @@ export default function () {
         use_last_revision = true;
     }
 
-    const url = `http://localhost:8080/user_banner?feature_id=${banner.feature_id}&tag_id=${tagID}&use_last_revision=${use_last_revision}`;
+    const url = `http://0.0.0.0:8080/user_banner?feature_id=${banner.feature_id}&tag_id=${tagID}&use_last_revision=${use_last_revision}`;
     const params = {
         headers: {
             'token': token,
         },
-        tags: { name: "user_banner" },
     };
 
-    // send a post request and save response as a variable
     http.get(url, params);
 
 }
