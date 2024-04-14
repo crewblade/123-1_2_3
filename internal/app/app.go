@@ -39,11 +39,14 @@ func Run(configPath string) {
 	taskScheduler, err := gocron.NewScheduler()
 	if err != nil {
 		log.Error("failed to init gocron task scheduler", err)
+		os.Exit(1)
 	}
 	ctx := context.Background()
 	err = StartCleaningTask(taskScheduler, storage, log, ctx, cfg.Interval)
 	if err != nil {
 		log.Error("error in cleaning task:", err.Error())
+		os.Exit(1)
+
 	}
 
 	log.Info("Initializing handlers and routes...")
