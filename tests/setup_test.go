@@ -45,7 +45,7 @@ func (s *Suite) SetupSuite() {
 
 	storagePath := os.Getenv(keyDB)
 	fmt.Println("storagePath:", storagePath)
-	storage, err := postgres.New(storagePath)
+	storage, err := postgres.New(storagePath, 5, 10, uint64(100))
 	if err != nil {
 		s.FailNow("failed to create DB connection: %w", err)
 	}

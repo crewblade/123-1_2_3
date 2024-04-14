@@ -27,7 +27,7 @@ func Run(configPath string) {
 	log.Info("Starting app", slog.Any("cfg", cfg))
 
 	log.Info("Initializing postgres...")
-	storage, err := postgres.New(cfg.PG.URL)
+	storage, err := postgres.New(cfg.PG.URL, cfg.PG.MinConnections, cfg.PG.MaxConnections, cfg.PG.MaxConnIdleTime)
 	if err != nil {
 		log.Error("failed to init postgres", sl.Err(err))
 		os.Exit(1)

@@ -29,21 +29,23 @@ export default function () {
 
     const banner = randomItem(banners);
     const tagID = randomItem(banner.tag_ids);
+    const limit = randomIntBetween(0, 100);
+    const offset = randomIntBetween(0, 100);
 
     const pattern = randomIntBetween(0, 2);
 
-    let url = `http://0.0.0.0:8080/banner?feature_id=${banner.feature_id}&tag_id=${tagID}`;
+    //let url = `http://0.0.0.0:8080/banner?feature_id=${banner.feature_id}&tag_id=${tagID}`;
 
-    // let url = `http://0.0.0.0:8080//banner?feature_id=${banner.feature_id}&tag_id=${tagID}&limit=${limit}&offset=${offset}`;
-    // if (pattern === 0) {
-    //     url = `http://0.0.0.0:8080/banner?tag_id=${tagID}&limit=${limit}&offset=${offset}`;
-    // }
-    // if (pattern === 1) {
-    //     url = `http://0.0.0.0:8080/banner?feature_id=${banner.feature_id}&limit=${limit}&offset=${offset}`;
-    // }
-    // if (pattern === 2) {
-    //     url = `http://0.0.0.0:8080/banner?&limit=${limit}&offset=${offset}`;
-    // }
+    let url = `http://0.0.0.0:8080//banner?feature_id=${banner.feature_id}&tag_id=${tagID}&limit=${limit}&offset=${offset}`;
+    if (pattern === 0) {
+        url = `http://0.0.0.0:8080/banner?tag_id=${tagID}&limit=${limit}&offset=${offset}`;
+    }
+    if (pattern === 1) {
+        url = `http://0.0.0.0:8080/banner?feature_id=${banner.feature_id}&limit=${limit}&offset=${offset}`;
+    }
+    if (pattern === 2) {
+        url = `http://0.0.0.0:8080/banner?&limit=${limit}&offset=${offset}`;
+    }
 
 
     const params = {

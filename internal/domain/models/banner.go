@@ -1,6 +1,9 @@
 package models
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
 type Banner struct {
 	BannerID  int             `json:"banner_id"`
@@ -8,8 +11,8 @@ type Banner struct {
 	FeatureID int             `json:"feature_id"`
 	Content   json.RawMessage `json:"content"`
 	IsActive  bool            `json:"is_active"`
-	CreatedAt string          `json:"created_at"`
-	UpdatedAt string          `json:"updated_at"`
+	CreatedAt time.Time       `json:"created_at"`
+	UpdatedAt time.Time       `json:"updated_at"`
 }
 type BannerForUser struct {
 	Content  json.RawMessage `json:"content"`

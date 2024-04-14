@@ -35,7 +35,10 @@ type (
 	}
 
 	PG struct {
-		URL string `env-required:"true"   yaml:"url" env:"PG_URL"`
+		URL             string `env-required:"true"   yaml:"url" env:"PG_URL"`
+		MaxConnections  int    `yaml:"max_connections" env-default:"10"`
+		MinConnections  int    `yaml:"min_connections" env-default:"10"`
+		MaxConnIdleTime uint64 `yaml:"max_conn_idle_time" env-default:"100"`
 	}
 	Scheduler struct {
 		Interval time.Duration `yaml:"interval" env-default:"3h"`

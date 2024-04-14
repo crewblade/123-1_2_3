@@ -17,7 +17,10 @@ scheduler:
 cache:
   expiration: '5m'
 
-#postgres:
+postgres:
+  max_connections: 15
+  min_connections: 5
+  max_conn_idle_time: 100
 #  url: 'postgres://postgres:postgres@localhost:5432/postgres'
 
 
