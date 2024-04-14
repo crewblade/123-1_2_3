@@ -18,15 +18,6 @@
 
 ## Примеры запросов
 
-### Получение баннера для юзера
-```bash
-curl -X GET "http://0.0.0.0:8080/user_banner?tag_id=123&feature_id=456&use_last_revision=true" -H "token: user_token"
-```
-
-### Получение баннеров по фильтру:
-```bash
-curl -X GET "http://0.0.0.0:8080/banner?tag_id=123&feature_id=456&limit=10&offset=0" -H "token: admin_token"
-```
 
 ### Сохранение баннера:
 ```bash
@@ -38,6 +29,31 @@ curl -X POST "http://0.0.0.0:8080/banner" -H "token: admin_token" -H "Content-Ty
 }'
 ```
 
+**Ответ**:
+```bash
+{"status":201,"banner_id":1}
+````
+
+### Получение баннера для юзера
+```bash
+curl -X GET "http://0.0.0.0:8080/user_banner?tag_id=456&feature_id=789&use_last_revision=true" -H "token: user_token"
+```
+
+**Ответ**:
+```bash
+{"status":200,"content":{"url":"test url","text":"test text","title":"test title"}}
+```
+
+### Получение баннеров по фильтру:
+```bash
+curl -X GET "http://0.0.0.0:8080/banner?tag_id=123&feature_id=789&limit=10&offset=0" -H "token: admin_token"
+```
+
+**Ответ**:
+```bash
+{"status":200,"items":[{"banner_id":1,"tag_ids":[123,456],"feature_id":789,"content":{"url":"test url","text":"test text","title":"test title"},"is_active":true,"created_at":"2024-04-14T14:12:43.034594Z","updated_at":"2024-04-14T14:12:43.034594Z"}]}
+```
+
 ### Обновление баннера по айди:
 ```bash
 curl -X PATCH "http://0.0.0.0:8080/banner/1" -H "token: admin_token" -H "Content-Type: application/json" -d '{
@@ -47,13 +63,52 @@ curl -X PATCH "http://0.0.0.0:8080/banner/1" -H "token: admin_token" -H "Content
   "is_active": true
 }'
 ```
+**Ответ**:
+```bash
+{"status":200}
+```
 
 ### Удаление баннера по айди:
 ```bash
 curl -X DELETE "http://0.0.0.0:8080/banner/1" -H "token: admin_token"
 ```
 
-### Удаление баннеров по фильтру:
+**Ответ**:
 ```bash
-curl -X DELETE "http://0.0.0.0:8080/banner?feature_id=5&tag_id=8" -H "token: admin_token"
+{"status":200}
 ```
+
+### Удаление баннеров по фильтру:
+
+**Предварительно поместим в таблицу баннеры с одинаковыми feature_id**:
+```bash
+curl -X POST "http://0.0.0.0:8080/banner" -H "token: admin_token" -H "Content-Type: application/json" -d '{
+  "tag_ids": [13, 46],
+  "feature_id": 11,
+  "content": {"title": "test title", "text": "test text", "url": "test url"},
+  "is_active": true
+}'
+//response:
+{"status":201,"banner_id":2}
+
+curl -X POST "http://0.0.0.0:8080/banner" -H "token: admin_token" -H "Content-Type: application/json" -d '{
+  "tag_ids": [3, 4, 5],
+  "feature_id": 11,
+  "content": {"title": "test title", "text": "test text", "url": "test url"},
+  "is_active": true
+}'
+//response:
+{"status":201,"banner_id":3}
+```
+**Запрос:**
+```bash
+curl -X DELETE "http://0.0.0.0:8080/banner?feature_id=11" -H "token: admin_token"
+```
+
+**Ответ**:
+```bash
+{"status":200,"count":2}
+```
+
+
+
