@@ -9,7 +9,7 @@ export const options = {
     scenarios: {
         load_test: {
             executor: 'constant-arrival-rate',
-            rate: 200,
+            rate: 1000,
             timeUnit: '1s',
             duration: '60s',
             preAllocatedVUs: 10,
