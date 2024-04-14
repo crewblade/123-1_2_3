@@ -40,7 +40,6 @@ type BannerUpdater interface {
 func UpdateBanner(
 	log *slog.Logger,
 	bannerUpdater BannerUpdater,
-	userProvider UserProvider,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "internal.httpserver.handlers.banner_id.UpdateBanner"
@@ -66,15 +65,7 @@ func UpdateBanner(
 			return
 		}
 
-		token := r.Header.Get("token")
-		log.With("token", token)
-
-		isAdmin, err := userProvider.IsAdmin(r.Context(), token)
-		if err != nil {
-			log.Error("Invalid token: ", sl.Err(err))
-			render.JSON(w, r, response.NewError(http.StatusUnauthorized, "User is not authorized"))
-			return
-		}
+		isAdmin := r.Context().Value("isAdmin").(bool)
 
 		if !isAdmin {
 			log.Error("User have no access")

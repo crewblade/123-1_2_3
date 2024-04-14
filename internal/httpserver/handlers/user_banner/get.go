@@ -24,10 +24,6 @@ type UserBannerGetter interface {
 	GetUserBanner(ctx context.Context, tagID int, featureID int) (json.RawMessage, bool, error)
 }
 
-type UserProvider interface {
-	IsAdmin(ctx context.Context, token string) (bool, error)
-}
-
 type BannerCache interface {
 	GetBanner(ctx context.Context, tagID, featureID int) (json.RawMessage, bool, error)
 	SetBanner(ctx context.Context, tagID, featureID int, banner *models.BannerForUser) error
@@ -36,7 +32,6 @@ type BannerCache interface {
 func GetUserBanner(
 	log *slog.Logger,
 	userBannerGetter UserBannerGetter,
-	userProvider UserProvider,
 	bannerCache BannerCache,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -68,15 +63,8 @@ func GetUserBanner(
 			return
 		}
 
-		token := r.Header.Get("token")
-		log.With("token", token)
+		isAdmin := r.Context().Value("isAdmin").(bool)
 
-		isAdmin, err := userProvider.IsAdmin(r.Context(), token)
-		if err != nil {
-			log.Error("Not authorized: ", sl.Err(err))
-			render.JSON(w, r, response.NewError(http.StatusUnauthorized, "User is not authorized"))
-			return
-		}
 		var bannerContent json.RawMessage
 		var bannerIsActive bool
 		isCacheUsed := false

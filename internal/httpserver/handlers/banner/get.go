@@ -22,10 +22,6 @@ type BannersGetter interface {
 	GetBanners(ctx context.Context, featureID, tagID, limit, offset *int) ([]models.Banner, error)
 }
 
-type UserProvider interface {
-	IsAdmin(ctx context.Context, token string) (bool, error)
-}
-
 type BannersCache interface {
 	GetBanners(ctx context.Context, featureID, tagID, limit, offset *int) ([]models.Banner, error)
 	SetBanners(ctx context.Context, featureID, tagID, limit, offset *int, banners []models.Banner) error
@@ -34,7 +30,6 @@ type BannersCache interface {
 func GetBanners(
 	log *slog.Logger,
 	bannersGetter BannersGetter,
-	userProvider UserProvider,
 	bannersCache BannersCache,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -42,9 +37,6 @@ func GetBanners(
 		const op = "internal.httpserver.handlers.banner.GetBanners"
 		log = log.With("op", op)
 		log = log.With("request_id", middleware.GetReqID(r.Context()))
-
-		token := r.Header.Get("token")
-		log.With("token", token)
 
 		tagID, err := utils.StrToIntPtr(r.URL.Query().Get("tag_id"), log)
 		if err != nil {
@@ -78,12 +70,7 @@ func GetBanners(
 			offset = &defaultOffset
 		}
 
-		isAdmin, err := userProvider.IsAdmin(r.Context(), token)
-		if err != nil {
-			log.Error("Invalid token: ", sl.Err(err))
-			render.JSON(w, r, response.NewError(http.StatusUnauthorized, "User is not authorized"))
-			return
-		}
+		isAdmin := r.Context().Value("isAdmin").(bool)
 
 		if !isAdmin {
 			log.Error("User have no access")

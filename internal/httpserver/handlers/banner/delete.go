@@ -23,16 +23,12 @@ type BannersDeleter interface {
 func DeleteBanners(
 	log *slog.Logger,
 	bannersDeleter BannersDeleter,
-	userProvider UserProvider,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		const op = "internal.httpserver.handlers.banner.DeleteBanners"
 		log = log.With("op", op)
 		log = log.With("request_id", middleware.GetReqID(r.Context()))
-
-		token := r.Header.Get("token")
-		log.With("token", token)
 
 		tagID, err := utils.StrToIntPtr(r.URL.Query().Get("tag_id"), log)
 		if err != nil {
@@ -46,12 +42,7 @@ func DeleteBanners(
 			return
 		}
 
-		isAdmin, err := userProvider.IsAdmin(r.Context(), token)
-		if err != nil {
-			log.Error("Invalid token: ", sl.Err(err))
-			render.JSON(w, r, response.NewError(http.StatusUnauthorized, "User is not authorized"))
-			return
-		}
+		isAdmin := r.Context().Value("isAdmin").(bool)
 
 		if !isAdmin {
 			log.Error("User have no access")

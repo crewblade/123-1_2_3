@@ -33,7 +33,7 @@ type BannerSaver interface {
 	) (int, error)
 }
 
-func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProvider) http.HandlerFunc {
+func SaveBanner(log *slog.Logger, bannerSaver BannerSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "internal.httpserver.handlers.banner.SaveBanner"
 
@@ -51,15 +51,7 @@ func SaveBanner(log *slog.Logger, bannerSaver BannerSaver, userProvider UserProv
 			return
 		}
 
-		token := r.Header.Get("token")
-		log.With("token", token)
-
-		isAdmin, err := userProvider.IsAdmin(r.Context(), token)
-		if err != nil {
-			log.Error("Invalid token: ", sl.Err(err))
-			render.JSON(w, r, response.NewError(http.StatusUnauthorized, "User is not authorized"))
-			return
-		}
+		isAdmin := r.Context().Value("isAdmin").(bool)
 
 		if !isAdmin {
 			log.Error("User have no access")
